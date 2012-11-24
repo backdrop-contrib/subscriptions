@@ -3,6 +3,8 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 
 subscriptions 7.x-1.x-dev:
+  Bugs fixed:
+    - #1821116: Fix the [subs:files:*] token.
 
 
 subscriptions 7.x-1.1 (2012-11-01):

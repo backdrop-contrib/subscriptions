@@ -58,9 +58,7 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
     }
 
     // files:field_FILE
-    if (user_access('view uploaded files')) {
-      $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'files', 'list<file>');
-    }
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'files', 'list<file>');
 
     // terms:field_TERM
     $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'terms', 'list<term>');
@@ -100,9 +98,7 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
     }
 
     // files:field_FILE
-    if (user_access('view uploaded files')) {
-      $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'files', 'list<file>');
-    }
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'files', 'list<file>');
 
     // terms:field_TERM
     $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'terms', 'list<term>');
