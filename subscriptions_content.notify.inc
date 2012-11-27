@@ -33,6 +33,7 @@ function _subscriptions_content_load($nid, $comment_load_sqid = NULL) {
         ->condition('c.nid', $nid)
         ->addTag('node_access')
         ->addTag('comment_filter')
+        ->addMetaData('base_table', 'comment')
         ->addMetaData('node', $node);
 
       $query->join('subscriptions_queue', 'sq', (db_driver() != 'pgsql' ? 'c.cid = sq.load_args' : 'CAST(c.cid AS VARCHAR) = sq.load_args'));
