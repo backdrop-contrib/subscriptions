@@ -671,6 +671,7 @@ function subscriptions_get(array $params) {
   $subscriptions = array();
   // Build query
   $query = db_select('subscriptions', 's');
+  $query->fields('s');
   foreach ($params as $field => $value) {
     $query->condition($field, $value);
   }

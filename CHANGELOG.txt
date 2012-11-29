@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Bugs fixed:
+    - #1853644 by kimwes: Fix a PDOException in subscriptions_get().
     - #1831666: Add the missing 'base_table' meta data to a node access query.
     - #1821116: Fix the [subs:files:*] token.
 
