@@ -279,7 +279,18 @@ function _subscriptions_mail_send($module, $mailkey, $name, $to, $from, $uid, $s
     'object' => NULL,
   ), $from, TRUE);
 
-  $watchdog_params = array('%name' => $name, '!address' => "<a href='mailto:$to'>$to</a>");
+  $to = check_plain($to);
+  $watchdog_params = array(
+    '%name'        => $name,
+    '!address'     => "<a href='mailto:$to'>$to</a>",
+    '!result'      => 'result',
+    '%result'      => $mail_success['result'],
+    '!drupal_mail' => l('drupal_mail', 'http://api.drupal.org/api/search/7/drupal_mail'),
+  );
+  if (variable_get('subscriptions_watchall', 0)) {
+    watchdog('subscriptions', 'Notification for %name (!address) passed on to !drupal_mail(), !result=[%result].', $watchdog_params, WATCHDOG_DEBUG, l(t('edit user'), "user/$uid/edit"));
+  }
+
   if (!empty($mail_success['result'])) {
     if (variable_get('subscriptions_watchgood', 1)) {
       watchdog('subscriptions', 'Notification sent to...', $watchdog_params);
