@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
   Bugs fixed:
     - #1853644 by kimwes: Fix a PDOException in subscriptions_get().

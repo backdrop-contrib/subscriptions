@@ -90,9 +90,9 @@ function _subscriptions_mail_form_subscriptions_settings_form_alter(array &$form
   );
   $form['mail_settings']['subscriptions_watchall'] = array(
     '#type'          => 'checkbox',
-    '#title'         => t('Display watchdog debug entries for all mailings'),
+    '#title'         => t('Display watchdog debug entries for all queued and ready notifications'),
     '#default_value' => variable_get('subscriptions_watchall', 0),
-    '#description'   => t('Logs every call to drupal_mail() to the watchdog log.  Default is OFF.'),
+    '#description'   => t('Logs every call to drupal_mail() as well as every dropped notification to the watchdog log.  Default is OFF.'),
   );
   if (module_exists('mail_edit')) {
     $form['mail_settings']['subscriptions_showmailkeys'] = array(
