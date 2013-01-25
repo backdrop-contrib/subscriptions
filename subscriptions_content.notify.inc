@@ -24,7 +24,13 @@ function _subscriptions_content_load($nid, $comment_load_sqid = NULL) {
   // of comments), so we don't gain from caching nodes; on the contrary: we
   // might run out of memory!
 
-  if (!empty($node)) {
+  $watchdog = 'watchdog';
+  if (empty($node)) {
+    if (variable_get('subscriptions_watchall', 0)) {
+      $watchdog('subscriptions', t('User %user_name was unable or not allowed to load node/%nid.', array('%user_name' => $user->name, '%nid' => $nid)), NULL, WATCHDOG_DEBUG);
+    }
+  }
+  else {
     if (module_exists('comment')) {
       // Load comments like comment_get_thread().
       $query = db_select('comment', 'c');

@@ -57,13 +57,14 @@ function _subscriptions_mail_cron() {
     $watchdog_variables['%user_name'] = $user->name;
 
     do {  // once and repeat while adding to a digest
+      $watchall = variable_get('subscriptions_watchall', 0);
       if (!$user->status) {
-        if (variable_get('subscriptions_watchall', 0)) {
+        if ($watchall) {
           $watchdog('subscriptions', t('Subscription of blocked user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }
       }
       elseif (!$user->access) {
-        if (variable_get('subscriptions_watchall', 0)) {
+        if ($watchall) {
           $watchdog('subscriptions', t('Subscription of never-logged-in user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }
       }
@@ -80,10 +81,14 @@ function _subscriptions_mail_cron() {
 
           // One FALSE vote is enough to deny. Also, we need a non-empty array.
           $allow = !empty($access) && array_search(FALSE, $access) === FALSE;
+          if (!$allow && $watchall) {
+            $watchdog('subscriptions', t("User %user_name was denied access to %load(%args).", $watchdog_variables + array('%load' => $load_function, '%args' => serialize($load_args))), NULL, WATCHDOG_DEBUG);
+            $watchall = FALSE;
+          }
           $loaded_objects[$user->uid][$load_function][$load_args] = $allow ? $object : FALSE;
         }
         if (empty($loaded_objects[$user->uid][$load_function][$load_args])) {
-          if (variable_get('subscriptions_watchall', 0)) {
+          if ($watchall) {
             $watchdog('subscriptions', t('User %user_name was unable or not allowed to %load(%args).', $watchdog_variables + array('%load' => $load_function, '%args' => serialize($load_args))), NULL, WATCHDOG_DEBUG);
           }
         }
