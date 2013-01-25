@@ -54,7 +54,7 @@ function _subscriptions_mail_cron() {
     $user = user_load($queue_item['uid']);
     $lang_code = $language->language;
     $digest_data = array('subs' => array('type' => 'digest'));
-    $watchdog_variables += array('%user_name' => $user->name);
+    $watchdog_variables['%user_name'] = $user->name;
 
     do {  // once and repeat while adding to a digest
       if (!$user->status) {
