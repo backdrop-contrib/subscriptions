@@ -264,3 +264,17 @@ function _subscriptions_mail_check_baseurl($interactive) {
   }
 }
 
+function subscriptions_mail_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes'] += array(
+    'subscriptions' => array(
+      'label' => t('Subscriptions'),
+      'custom settings' => FALSE,
+    ),
+  );
+  $entity_info['comment']['view modes'] += array(
+    'subscriptions' => array(
+      'label' => t('Subscriptions'),
+      'custom settings' => FALSE,
+    ),
+  );
+}

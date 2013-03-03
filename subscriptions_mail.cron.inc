@@ -210,7 +210,7 @@ function subscriptions_mail_digest_add_item($digest_data, $mailmod, $mailkey, $d
   );
 
   // This code is adapted from drupal_mail() and simulates mailing the item.
-  // We probably need to provide all data in order to not surprise any
+  // We probably need to provide all the data in order to not surprise any
   // third-party module that implements hook_mail() or hook_mail_alter().
   $message = array(
     'id'       => $mailmod . '_' . $mailkey,

@@ -18,6 +18,7 @@
 function subscriptions_content_tokens($type, array $tokens, array $data = array(), array $options = array()) {
   //dpm($tokens, "subscriptions_content_tokens($type) - tokens");
   //dpm($data, "subscriptions_content_tokens($type) - data");
+  //dpm($options, "subscriptions_content_tokens($type) - options");
   $sanitize = !empty($options['sanitize']);
 
   $replacements = array();
@@ -54,6 +55,10 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
         case 'has-distinct-summary':
           $replacements[$original] = 0;
           break;
+        case 'view':
+          $element = comment_view($comment, $data['node'], 'subscriptions', $options['language']->language);
+          $replacements[$original] = drupal_render($element);
+          break;
       }
     }
 
@@ -82,6 +87,10 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
         case 'has-distinct-summary':
           $repls = token_generate('node', array('summary' => '[node:summary]', 'body' => '[node:body]'), $data, $options);
           $replacements[$original] = (int) (!empty($repls['[node:summary]']) && $repls['[node:summary]'] != $repls['[node:body]']);
+          break;
+        case 'view':
+          $element = node_view($node, 'subscriptions', $options['language']->language);
+          $replacements[$original] = drupal_render($element);
           break;
       }
     }

@@ -100,7 +100,11 @@ function subscriptions_token_info() {
            'type' => 'list<term>',
            'dynamic' => TRUE,
          ),
-       ),
+        'view' => array(
+          'name' => t('View'),
+          'description' => t('The item rendered using the %Subscriptions view mode.', array('%Subscriptions' => t('Subscriptions'))),
+        ),
+      ),
       'subs_item' => array(
         'as-TYPE' => array(
           'name' => t('Cast to %TYPE', $variables),
@@ -178,7 +182,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-    // Chained token relationships.
+      // Chained token relationships.
     if ($url_tokens = token_find_with_prefix($tokens, 'manage-url')) {
       $replacements += token_generate('url', $url_tokens, array('path' => 'user/' . $user->uid . '/subscriptions'), $options);
     }

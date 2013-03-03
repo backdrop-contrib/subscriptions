@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #1932394: New [subs:view] tokens and new 'Subscriptions' view mode.
     - #1895602: Add more debug logging.
     - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
