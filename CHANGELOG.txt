@@ -4,11 +4,14 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #1993136: Add option to send https links.
+    - #1984634 by torrance123: Pass the full queue item to hook_subscriptions('mailkey_alter').
     - #1932394: New [subs:view] tokens and new 'Subscriptions' view mode.
     - #1895602: Add more debug logging.
     - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
   Bugs fixed:
+    - #1807356 by karleberts: Fix PostgreSQL 'Object not in prerequisite state' error when trying error when trying to create a user.
     - #1895602-8: Fix a buglet in the new debug logging code.
     - #1853644 by kimwes: Fix a PDOException in subscriptions_get().
     - #1831666: Add the missing 'base_table' meta data to a node access query.

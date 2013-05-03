@@ -333,9 +333,44 @@ function _subscriptions_mail_send($module, $mailkey, $name, $to, $from, $uid, $s
 /**
  * Implements hook_mail_alter().
  *
+ * Optionally change links to use HTTPS, but only for Subscriptions mails.
+ *
  * @param $message
  */
-function subscriptions_mail_mail_alter(&$message) {
+function _subscriptions_mail_mail_alter(array &$message) {
+  global $user;
+  static $site_url = NULL;
+  static $replacement;
+
+  if (!_subscriptions_mail_cron_is_running()) {
+    return;
+  }
+
+  if (!isset($site_url)) {
+    $site_url = url('', array('absolute' => TRUE));
+    if (dpm(_subscriptions_get_setting('secure_links', $user)) > 0) {
+      if (strpos($site_url, 'http:') === 0) {
+        $site_url = $replacement[$site_url] = 'https:' . substr($site_url, 5);
+      }
+    }
+    else {
+      if (strpos($site_url, 'https:') === 0) {
+        $site_url = $replacement[$site_url] = 'http:' . substr($site_url, 6);
+      }
+    }
+  }
+
+  if (!empty($replacement)) {
+    $msg = strtr($message['body'][0], $replacement);
+    while (preg_match("#(?P<before>(.*)(<[aA] +)(href|HREF)=([\"']))/(?P<after>.*)$#sAD", $msg, $matches)) {
+      $msg = $matches['before'] . $site_url . $matches['after'];
+    }
+    while (preg_match("#(?P<before>(.*)<(img|IMG) +(src|SRC)=([\"']))/(?P<after>.*)$#sAD", $msg, $matches)) {
+      $msg = $matches['before'] . $site_url . $matches['after'];
+    }
+    $message['body'][0] = $msg;
+  }
+
   /* Comment this line for debugging...
   dpm($message, 'drupal_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');
   $message['to'] = '';
