@@ -103,7 +103,7 @@ function _subscriptions_mail_cron() {
           $data_function = $fields[$lang_code][$module][$field]['data_function'];
           $mailmod = (empty($fields[$lang_code][$module][$field]['mail_module']) ? 'subscriptions_mail' : $fields[$lang_code][$module][$field]['mail_module']);
           $mailkey = $fields[$lang_code][$module][$field]['mailkey'];
-          if ($mailkey_altered = module_invoke_all('subscriptions', 'mailkey_alter', $mailkey, $object)) {
+          if ($mailkey_altered = module_invoke_all('subscriptions', 'mailkey_alter', $mailkey, $object, $queue_item)) {
             $mailkey = $mailkey_altered[0];
           }
           $digest = $queue_item['digest'] > 0 || $queue_item['digest'] == -1 && _subscriptions_get_setting('digest', 0) > 0;
