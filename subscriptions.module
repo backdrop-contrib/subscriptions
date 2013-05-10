@@ -331,7 +331,7 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
   $query
     ->fields('s', array('send_interval', 'author_uid', 'send_updates', 'send_comments'))
     ->condition('s.recipient_uid', $rids, 'IN');
-  db_insert('subscriptions')
+  db_insert('subscriptions', array('return' => Database::RETURN_NULL))
     ->from($query)
     ->execute();
 }
