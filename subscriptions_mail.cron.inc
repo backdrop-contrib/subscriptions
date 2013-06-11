@@ -348,7 +348,7 @@ function _subscriptions_mail_mail_alter(array &$message) {
 
   if (!isset($site_url)) {
     $site_url = url('', array('absolute' => TRUE));
-    if (dpm(_subscriptions_get_setting('secure_links', $user)) > 0) {
+    if (_subscriptions_get_setting('secure_links', $user) > 0) {
       if (strpos($site_url, 'http:') === 0) {
         $site_url = $replacement[$site_url] = 'https:' . substr($site_url, 5);
       }
