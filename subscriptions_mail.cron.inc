@@ -342,10 +342,6 @@ function _subscriptions_mail_mail_alter(array &$message) {
   static $site_url = NULL;
   static $replacement;
 
-  if (!_subscriptions_mail_cron_is_running()) {
-    return;
-  }
-
   if (!isset($site_url)) {
     $site_url = url('', array('absolute' => TRUE));
     if (_subscriptions_get_setting('secure_links', $user) > 0) {
