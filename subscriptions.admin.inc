@@ -827,7 +827,7 @@ function _subscriptions_user_settings_form_submit(array $form, array &$form_stat
     db_update('subscriptions_user')
       ->fields(array(
         'digest' => $form_state['values']['digest'],
-        'secure_links' => $form_state['values']['secure_links'],
+        'secure_links' => (isset($form_state['values']['secure_links']) ? $form_state['values']['secure_links'] : 0),
         'send_interval' => ($uid > 0 && $send_interval_visible == - 2 ? - 1 : $form_state['values']['send_interval']),
         'send_updates' => ($uid > 0 && $send_updates_visible == - 2 ? - 1 : $form_state['values']['send_updates']),
         'send_comments' => ($uid > 0 && $send_comments_visible == - 2 ? - 1 : $form_state['values']['send_comments']),

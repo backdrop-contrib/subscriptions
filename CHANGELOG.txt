@@ -11,6 +11,7 @@ subscriptions 7.x-1.x-dev:
     - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
   Bugs fixed:
+    - #2014867: Avoid a crash due to suppressed 'secure_links' form element.
     - Remove redundant check (no functional change).
     - #2014867: Fix a stray dpm() call.
     - #1807356 by karleberts: Fix PostgreSQL 'Object not in prerequisite state' error when trying error when trying to create a user.
