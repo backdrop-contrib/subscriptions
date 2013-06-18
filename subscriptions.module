@@ -495,7 +495,7 @@ function subscriptions_queue(array $event) {
           // author-specific subscriptions trigger on comments, when the node author is subscribed to:
           ->condition('s.author_uid', array(($module == 'node' && $event['type'] == 'comment' && isset($event['node']->uid) ? $event['node']->uid : $event['uid']) , -1), 'IN')
           ->groupBy('u.uid');
-        if (db_driver() == 'pgsql') {
+        if (db_driver() == 'pgsql' || db_driver() == 'sqlsrv') {
           $select
             ->groupBy('u.uid')->groupBy('u.name')->groupBy('u.language')
             ->groupBy('s.module')->groupBy('s.field')->groupBy('s.value')->groupBy('s.author_uid')->groupBy('s.send_interval')
