@@ -63,7 +63,7 @@ function _subscriptions_mail_cron() {
           $watchdog('subscriptions', t('Subscription of blocked user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }
       }
-      elseif (!$user->access) {
+      elseif (!$user->access && !variable_get('subscriptions_mail_unaccessed_users', FALSE)) {
         if ($watchall) {
           $watchdog('subscriptions', t('Subscription of never-logged-in user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }

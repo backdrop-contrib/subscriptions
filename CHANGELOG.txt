@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #2073855 by torrance123: Added Allow sending mail notifications to users with $user->access == 0.
     - #1993136: Add option to send https links.
     - #1984634 by torrance123: Pass the full queue item to hook_subscriptions('mailkey_alter').
     - #1932394: New [subs:view] tokens and new 'Subscriptions' view mode.
