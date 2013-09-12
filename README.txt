@@ -26,7 +26,7 @@ Requirements
 ------------
 
 For sending mail using Subscriptions Mail the following modules are needed:
-  - Mail Editor     http://drupal.org/project/mail_editor
+  - Mail Editor     http://drupal.org/project/mail_edit
   - Token           http://drupal.org/project/token
 
 
