@@ -142,7 +142,7 @@ function _subscriptions_content_node_form(array $form, $uid) {
                                 ELSE n.changed END', 'latest_activity');
   }
   else {
-    $query->addExpression('IF(s.send_updates = 0, n.created, n.changed)', 'latest_activity');
+    $query->addExpression('CASE WHEN s.send_updates = 0 THEN n.created ELSE n.changed END', 'latest_activity');
   }
   $query
     ->condition('s.module', 'node')

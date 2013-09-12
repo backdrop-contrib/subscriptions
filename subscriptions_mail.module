@@ -300,10 +300,12 @@ function subscriptions_mail_entity_info_alter(&$entity_info) {
       'custom settings' => FALSE,
     ),
   );
-  $entity_info['comment']['view modes'] += array(
-    'subscriptions' => array(
-      'label' => t('Subscriptions'),
-      'custom settings' => FALSE,
-    ),
-  );
+  if (module_exists('comment')) {
+    $entity_info['comment']['view modes'] += array(
+      'subscriptions' => array(
+        'label' => t('Subscriptions'),
+        'custom settings' => FALSE,
+      ),
+    );
+  }
 }
