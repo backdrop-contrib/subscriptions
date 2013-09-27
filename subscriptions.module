@@ -694,7 +694,8 @@ function subscriptions_get(array $params) {
  * @ingroup hooks
  */
 function subscriptions_types($field = NULL, $type = NULL) {
-  static $types, $list;
+  $types = &drupal_static(__FUNCTION__ . '_types');
+  $list = &drupal_static(__FUNCTION__ . '_list');
 
   if (!isset($types)) {
     $types = module_invoke_all('subscriptions', 'types');

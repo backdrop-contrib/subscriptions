@@ -13,6 +13,7 @@ subscriptions 7.x-1.x-dev:
     - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
   Bugs fixed:
+    - #2088375 by Yaron Tal: Fixed raw statics causing problems with Features module.
     - #2033869 by malc0mn: Fixed Wrong project reference in README.txt.
     - #2065531: Pages/Threads throws PDOException when core comment.module is disabled (PostgreSQL+other).
     - #2021775 by jyeany: Fixed SQL Server Invalid Group By.
