@@ -144,6 +144,7 @@ http://example.com/subscriptions/add/type/forum
 http://example.com/subscriptions/add/type/forum/12
 http://example.com/subscriptions/add/taxa/123
 http://example.com/subscriptions/add/taxa/123/12
+(where 1234 is a nid, 123 a tid, and 12 a uid)
 
 You can combine these with a log-in link as follows:
 
