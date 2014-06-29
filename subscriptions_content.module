@@ -248,10 +248,45 @@ function subscriptions_content_node_load(array $nodes, array $types) {
   $unpublished_nids = &drupal_static('subscriptions_content_unpublished_nids', array());
   foreach ($nodes as $node) {
     if (!$node->status) {
-      $unpublished_nids[] = $node->nid;
+      // Since workbench_moderate does some unconventional things to the node
+      // statuses we need to make a special case to check if a node that is
+      // moderated by workbench_moderation is actually unpublished.
+      if (module_exists('workbench_moderation') && workbench_moderation_node_type_moderated($node->type)) {
+        if (subscriptions_content_workbench_moderation_check_is_unpublished($node)) {
+          $unpublished_nids[] = $node->nid;
+        }
+      }
+      else {
+        $unpublished_nids[] = $node->nid;
+      }
     }
     subscriptions_content_node_prepare($node);
   }
+}
+
+/**
+ * Check if a node that is moderated by workbench is actually published.
+ *
+ * @param object $node
+ *   The node object of a workbench_moderation moderated node.
+ *
+ * @return bool
+ *   Returns TRUE if the node is unpublished by workbench_moderation standards.
+ */
+function subscriptions_content_workbench_moderation_check_is_unpublished($node) {
+  $states = db_select('workbench_moderation_node_history', 'wbmnh')
+    ->condition('nid', $node->nid)
+    ->fields('wbmnh', array('state'))
+    ->execute()->fetchCol();
+
+  $states = array_count_values($states);
+
+  // Is there any published states in the history? If so it has been published
+  // before.
+  if (empty($states[workbench_moderation_state_published()])) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**

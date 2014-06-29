@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #2027767 by grndlvl, pattersonc, salvis: Added Workbench moderation support.
     - #1575838 by rooby, salvis: Add support to allow making term subscribe options visible for hidden term fields.
     - #2073855 by torrance123: Added Allow sending mail notifications to users with $user->access == 0.
     - #1993136: Add option to send https links.
