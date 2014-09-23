@@ -63,10 +63,10 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
     }
 
     // files:field_FILE
-    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'files', 'list<file>');
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'files', 'subs_list<file>');
 
     // terms:field_TERM
-    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'terms', 'list<term>');
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'comment', 'terms', 'subs_list<term>');
   }
   elseif ($type == 'subs' && !empty($data['node'])) {
     $node = $data['node'];
@@ -107,10 +107,10 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
     }
 
     // files:field_FILE
-    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'files', 'list<file>');
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'files', 'subs_list<file>');
 
     // terms:field_TERM
-    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'terms', 'list<term>');
+    $replacements += _subscriptions_content_tokens_field_array($type, $tokens, $data, $options, 'node', 'terms', 'subs_list<term>');
   }
 
   return $replacements;

@@ -74,7 +74,7 @@ function subscriptions_token_info() {
         'items' => array(
           'name' => t('Digest Items'),
           'description' => t('The array of formatted items to send to one recipient (for building a digest).'),
-          'type' => 'list<subs_item>',
+          'type' => 'subs_list<subs_item>',
         ),
         'subs-module' => array(
           'name' => t('Subscription module'),
@@ -88,18 +88,20 @@ function subscriptions_token_info() {
           'name' => t('Subscription value'),
           'description' => t('The value of the field of the item that triggered the notification.'),
         ),
+        // The following tokens need to be implemented for each entity type
+        // that can be subscribed to, if they are applicable.
         'files' => array(
           'name' => t('Files'),
           'description' => t('The array of attached files in the specified field.'),
-          'type' => 'list<file>',
+          'type' => 'subs_list<file>',
           'dynamic' => TRUE,
         ),
         'terms' => array(
-           'name' => t('Terms'),
-           'description' => t('The array of taxonomy terms in the specified field.'),
-           'type' => 'list<term>',
-           'dynamic' => TRUE,
-         ),
+          'name' => t('Terms'),
+          'description' => t('The array of taxonomy terms in the specified field.'),
+          'type' => 'subs_list<term>',
+          'dynamic' => TRUE,
+        ),
         'view' => array(
           'name' => t('View'),
           'description' => t('The item rendered using the %Subscriptions view mode.', array('%Subscriptions' => t('Subscriptions'))),
@@ -193,7 +195,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       $replacements += token_generate('term', $forum_tokens, array('term' => taxonomy_term_load($data['node']->forum_tid)), $options);
     }
     if (isset($data['subs']['items']) && ($items_tokens = token_find_with_prefix($tokens, 'items'))) {
-      $replacements += token_generate('list<subs_item>', $items_tokens, array('list<subs_item>' => $data['subs']['items']), $options);
+      $replacements += token_generate('subs_list<subs_item>', $items_tokens, array('subs_list<subs_item>' => $data['subs']['items']), $options);
     }
   }
 
@@ -224,10 +226,10 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
     }
   }
 
-  // List<TYPE> tokens.
+  // subs_list<TYPE> tokens.
   // We've tried to contribute this code to Token module, see
   // http://drupal.org/node/1195874#comment-5070144
-  if (preg_match('/list<([a-z_]*)>/', $type, $match) && !empty($data[$type]) && is_array($data[$type])) {
+  if (preg_match('/subs_list<([a-z_]*)>/', $type, $match) && !empty($data[$type]) && is_array($data[$type])) {
     $array_type = $type;
     $element_type = $match[1];
     $array = $data[$array_type];
@@ -237,7 +239,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
 
     foreach ($tokens as $name => $original) {
       if ($name == ':') {
-        // Plain [list<>] token.
+        // Plain [subs_list<>] token.
         switch ($element_type) {
           case 'term':
             foreach ($array as $term) {
@@ -276,7 +278,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-    // [list<>:key:*] dynamic tokens.
+    // [subs_list<>:key:*] dynamic tokens.
     if (($value_tokens = token_find_with_prefix($tokens, 'key')) ||
         ($value_tokens = token_find_with_prefix($tokens, 'value'))) {
       $tokss = array();
@@ -291,7 +293,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-    // [list<>:index:*] dynamic tokens.
+    // [subs_list<>:index:*] dynamic tokens.
     if ($index_tokens = token_find_with_prefix($tokens, 'index')) {
       $tokss = array();
       foreach ($index_tokens as $index => $original) {
@@ -306,17 +308,17 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-    // [list<>:first:*] chained tokens.
+    // [subs_list<>:first:*] chained tokens.
     if ($first_tokens = token_find_with_prefix($tokens, 'first')) {
       $replacements += token_generate($element_type, $first_tokens, array($element_type => $array[$keys[0]]), $options);
     }
 
-    // [list<>:last:*] chained tokens.
+    // [subs_list<>:last:*] chained tokens.
     if ($last_tokens = token_find_with_prefix($tokens, 'last')) {
       $replacements += token_generate($element_type, $last_tokens, array($element_type => $array[count($keys) - 1]), $options);
     }
 
-    // [list<>:join:?] dynamic tokens.
+    // [subs_list<>:join:?] dynamic tokens.
     if ($join_tokens = token_find_with_prefix($tokens, 'join')) {
       $formatted = array();
       foreach ($array as $item) {
@@ -327,12 +329,12 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-    // [list<>:keys:*] chained tokens.
+    // [subs_list<>:keys:*] chained tokens.
     if ($key_tokens = token_find_with_prefix($tokens, 'keys')) {
       $replacements += token_generate('array', $key_tokens, array('array' => $keys), $options);
     }
 
-    // [list<>:reversed:*] chained tokens.
+    // [subs_list<>:reversed:*] chained tokens.
     if ($reversed_tokens = token_find_with_prefix($tokens, 'reversed')) {
       $reversed = array_reverse($array, TRUE);
       $replacements += token_generate($array_type, $reversed_tokens, array($array_type => $reversed), $options);
@@ -356,6 +358,7 @@ function subscriptions_token_info_alter(array &$data) {
   }
 
   //dpm($data, "BEF subscriptions_content_token_info_alter");
+
   // Remove some types and tokens that are not applicable for
   // Subscriptions notifications.
   unset($data['types']['current-page']);
@@ -372,17 +375,19 @@ function subscriptions_token_info_alter(array &$data) {
 
   // Note: Adding tokens to existing types doesn't work here.
 
-  // Add list<TYPE> types.
+  // Add our subs_list<TYPE> types.
   $list_types = array();
   foreach ($data['tokens'] as $group => $tokens) {
     foreach ($tokens as $token) {
-      if (isset($token['type']) && preg_match('/list<([a-z_]*)>/', $token['type'], $match)) {
+      if (isset($token['type']) && preg_match('/subs_list<([a-z_]*)>/', $token['type'], $match)) {
         $list_types[$match[1]] = $match[0];
       }
     }
   }
   foreach ($list_types as $type => $list) {
+    // Start out with Token module's 'array' type to ensure consistent terminology.
     $data['tokens'][$list] = $data['tokens']['array'];
+    // Adjust what needs to be adjusted.
     $data['tokens'][$list]['first']['type'] = $type;
     $data['tokens'][$list]['last']['type'] = $type;
     $data['tokens'][$list]['reversed']['type'] = $list;
@@ -398,13 +403,16 @@ function subscriptions_token_info_alter(array &$data) {
       'description' => t('The specific element of the array, indexed by zero-based numeric index.'),
       'dynamic' => TRUE,
     );
-    $type_name = $data['types'][$type]['name'];
+    // Remove the 'value' member, use 'index' instead.
+    unset($data['tokens'][$list]['value']);
+
+    // Let's call it "array" because that term is more familiar to the user.
+    $variables = array('@type' => $data['types'][$type]['name']);
     $data['types'][$list] = array(
-      'name' => t('Array of @type', array('@type' => $type_name)),
-      'description' => t('Tokens related to arrays of @type', array('@type' => $type_name)),
+      'name' => t('Array of @type', $variables),
+      'description' => t('Tokens related to arrays of @type', $variables),
       'needs-data' => $list,
     );
-    unset($data['tokens'][$list]['value']);
   }
 
   //dpm($data, "AFT subscriptions_content_token_info_alter");
