@@ -90,18 +90,6 @@ function subscriptions_token_info() {
         ),
         // The following tokens need to be implemented for each entity type
         // that can be subscribed to, if they are applicable.
-        'files' => array(
-          'name' => t('Files'),
-          'description' => t('The array of attached files in the specified field.'),
-          'type' => 'subs_list<file>',
-          'dynamic' => TRUE,
-        ),
-        'terms' => array(
-          'name' => t('Terms'),
-          'description' => t('The array of taxonomy terms in the specified field.'),
-          'type' => 'subs_list<term>',
-          'dynamic' => TRUE,
-        ),
         'view' => array(
           'name' => t('View'),
           'description' => t('The item rendered using the %Subscriptions view mode.', array('%Subscriptions' => t('Subscriptions'))),
@@ -127,6 +115,28 @@ function subscriptions_token_info() {
         ),
       ),
     ),
+  );
+  if (module_exists('file')) {
+    $info['tokens']['subs']['files'] = array(
+      'name' => t('Files'),
+      'description' => t('The array of attached files in the specified !File field.', array('!File' => t('File'))),
+      'type' => 'subs_list<file>',
+      'dynamic' => TRUE,
+    );
+  }
+  if (module_exists('taxonomy')) {
+    $info['tokens']['subs']['terms'] = array(
+      'name' => t('Terms'),
+      'description' => t('The array of taxonomy terms in the specified !Term_reference field.', array('!Term_reference' => t('Term reference'))),
+      'type' => 'subs_list<term>',
+      'dynamic' => TRUE,
+    );
+  }
+  $info['tokens']['subs']['texts'] = array(
+    'name' => t('Texts'),
+    'description' => t('The single value or array of values in the specified field, represented as text.'),
+    'type' => 'array',
+    'dynamic' => TRUE,
   );
   return $info;
 }
@@ -341,6 +351,84 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
     }
   }
 
+  $field_types = array(
+    'files' => 'subs_list<file>',             // files:field_FILE
+    'terms' => 'subs_list<term>',             // terms:field_TERM
+    'texts' => 'array',                       // texts:field_TEXT
+  );
+
+  // Entity field tokens.
+  if (isset($data['object_type']))
+  {
+    $type = $data['object_type'];
+    if (!empty($data[$type]) && $entity_type = token_get_entity_mapping('token', $type)) {
+      $entity = NULL;
+
+      foreach ($field_types as $field_type => $array_type) {
+        if ($field_tokens = token_find_with_prefix($tokens, $field_type)) {
+
+          if (empty($entity)) {
+            $entity = clone $data[$type];
+          }
+
+          $tokenss = array();
+          foreach ($field_tokens as $field_token => $original) {
+            $field_name = strtok($field_token, ':');
+            $tokenss[$field_name][substr($field_token, strlen($field_name) + 1)] = $original;
+          }
+
+          list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+          $fields = field_info_instances($entity_type, $bundle);
+          foreach ($tokenss as $field_name => $tokens2) {
+            if (isset($fields[$field_name])) {
+              if (empty($entity->{$field_name})) {
+                if (isset($tokens2['count'])) {
+                  $replacements[$tokens2['count']] = 0;
+                }
+              } else {
+                $objs = array();
+                if ($array_type == 'array') {
+                  $field_output = field_view_field($entity_type, $entity, $field_name, 'token', $language_code);
+                  $field_output['#token_options'] = $options;
+                  $field_output['#pre_render'][] = 'token_pre_render_field_token';
+                  foreach (element_children($field_output) as $key) {
+                    $obj = $field_output[$key]['#markup'];
+                    if (preg_match('/^<p>(.*)<\/p>\n$/', $obj, $match)) {
+                      $obj = $match[1];
+                    }
+                    $objs[$key] = $obj;
+                  }
+                  $replacements += token_generate($array_type, $tokens2, array($array_type => $objs), array('sanitize' => FALSE ) + $options);
+                }
+                else {
+                  if ($field_items = field_get_items($type, $entity, $field_name, $language_code)) {
+                    switch ($field_type) {
+                      case 'terms':
+                        // Term references are stored as tids only.
+                        $tids = array();
+                        foreach ($field_items as $term) {
+                          $tids[] = $term['tid'];
+                        }
+                        $objs = taxonomy_term_load_multiple($tids);
+                        break;
+                      default:
+                        foreach ($field_items as $key => $item) {
+                          $objs[$key] = (object) $item;
+                        }
+                    }
+                    $replacements += token_generate($array_type, $tokens2, array($array_type => $objs), $options);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      unset($entity);
+    }
+  }
+
   return $replacements;
 }
 
@@ -417,3 +505,37 @@ function subscriptions_token_info_alter(array &$data) {
 
   //dpm($data, "AFT subscriptions_content_token_info_alter");
 }
+
+/**
+ * Implements hook_tokens_alter().
+ *
+ * Add missing file tokens.
+ */
+function subscriptions_tokens_alter(array &$replacements, array $context) {
+  $options = $context['options'];
+
+  $sanitize = !empty($options['sanitize']);
+  $langcode = !empty($options['language']->language) ? $options['language']->language : NULL;
+
+  if ($context['type'] == 'file' && !empty($context['data']['file'])) {
+    $file = $context['data']['file'];
+
+    foreach ($context['tokens'] as $name => $original) {
+      if (isset($replacements[$original])) {
+        continue;
+      }
+      switch ($name) {
+        case 'description':
+        case 'display':
+        case 'title':
+        case 'alt':
+          if (isset($file->{$name})) {
+            $value = $file->{$name};
+            $replacements[$original] = $sanitize ? check_plain($value) : $value;
+          }
+          break;
+      }
+    }
+  }
+}
+

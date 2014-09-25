@@ -689,7 +689,7 @@ function subscriptions_content_type_is_blocked($content_type) {
  *   Subscriptions queue item.
  */
 function subscriptions_content_data(array &$data, $node, array $queue_item) {
-  $data['node'] = (is_array($node) ? (object) $node : $node);
+  $data[$data['object_type'] = 'node'] = (is_array($node) ? (object) $node : $node);
   subscriptions_data($data, $queue_item);
 }
 
