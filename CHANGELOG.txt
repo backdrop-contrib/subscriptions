@@ -16,6 +16,7 @@ subscriptions 7.x-1.x-dev:
     - Clean up and enhance debug logging from cron.
     - Add an option to log all drupal_mail() calls to help testing.
   Bugs fixed:
+    - #2235101 by Anybody: Translation for 'Latest activity', 'authored', 'commented' phrases on /user/[uid]/subscriptions/node page.
     - #2023013: Avoid a conflict with Entity API's list<> tokens.
     - #2135461: Explain the elements of the subscriptions links in README.txt.
     - #2088375 by Yaron Tal: Fixed raw statics causing problems with Features module.
