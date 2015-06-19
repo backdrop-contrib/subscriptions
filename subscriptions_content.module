@@ -863,3 +863,23 @@ function subscriptions_content_views_data_alter(&$data) {
   );
 }
 
+/**
+ * Implements hook_advuser_filters_alter().
+ *
+ * @param $filters
+ *   Array of filter definitions.
+ */
+function subscriptions_content_advuser_filters_alter(array &$filters) {
+  include_once DRUPAL_ROOT . '/modules/forum/forum.admin.inc';
+  $forum_tree = _forum_parent_select(-1, '', 'forum');
+  unset($forum_tree['#options'][0]);
+  $filters['subscriptions_forum'] = array(
+    'title' => t('Subscribed forum'),
+    'where' => "%alias.module = 'node' AND %alias.field = 'tid' AND %alias.value %op %subscriptions_forum_pkey",
+    'options' => $forum_tree['#options'],
+    'form_type' => 'select',
+    'operations' => array('=', '!='),
+    'join' => array('subscriptions', 's', '%alias.recipient_uid = u.uid'),
+  );
+}
+

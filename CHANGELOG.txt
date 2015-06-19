@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #1867454 by salvis: Implement integration with the Advanced User module for building a list of users subscribed to a given forum.
     - Add a note about a dependency on the Field UI core module.
     - #2344699 by salvis: Implement support for all core field types at the entity level.
     - #2027767 by grndlvl, pattersonc, salvis: Added Workbench moderation support.
