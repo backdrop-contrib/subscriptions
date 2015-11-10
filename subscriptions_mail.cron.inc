@@ -82,14 +82,14 @@ function _subscriptions_mail_cron() {
           // One FALSE vote is enough to deny. Also, we need a non-empty array.
           $allow = !empty($access) && array_search(FALSE, $access) === FALSE;
           if (!$allow && $watchall) {
-            $watchdog('subscriptions', t("User %user_name was denied access to %load(%args).", $watchdog_variables + array('%load' => $load_function, '%args' => serialize($load_args))), NULL, WATCHDOG_DEBUG);
+            $watchdog('subscriptions', t("User %user_name was denied access to %load(!args).", $watchdog_variables + array('%load' => $load_function, '!args' => filter_xss(serialize($load_args)))), NULL, WATCHDOG_DEBUG);
             $watchall = FALSE;
           }
           $loaded_objects[$user->uid][$load_function][$load_args] = $allow ? $object : FALSE;
         }
         if (empty($loaded_objects[$user->uid][$load_function][$load_args])) {
           if ($watchall) {
-            $watchdog('subscriptions', t('User %user_name was unable or not allowed to %load(%args).', $watchdog_variables + array('%load' => $load_function, '%args' => serialize($load_args))), NULL, WATCHDOG_DEBUG);
+            $watchdog('subscriptions', t('User %user_name was unable or not allowed to %load(!args).', $watchdog_variables + array('%load' => $load_function, '!args' => filter_xss(serialize($load_args)))), NULL, WATCHDOG_DEBUG);
           }
         }
         else {
