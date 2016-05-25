@@ -3,6 +3,9 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 
 subscriptions 7.x-1.x-dev:
+
+
+subscriptions 7.x-1.2 (2016-05-25):
   Enhancements:
     - #2604466 by brad.bulger: Add strict parameter to in_array() tests of content types to allow replacing the selects with checkboxes.
     - Tune watchdog message for denied notifications.
