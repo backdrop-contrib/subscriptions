@@ -3,4 +3,6 @@ description = The basic Subscriptions framework.
 package = "Subscriptions"
 core = 7.x
 
+files[] = tests/subscriptions.test
+
 configure = admin/config/system/subscriptions

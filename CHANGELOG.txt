@@ -3,6 +3,8 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 
 subscriptions 7.x-1.x-dev:
+  Enhancements:
+    - Create a dummy test to make the testbot happy.
 
 
 subscriptions 7.x-1.2 (2016-05-25):
