@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - Fix broken 'Append the mailkey to every notification' option.
     - Create a dummy test to make the testbot happy.
 
 

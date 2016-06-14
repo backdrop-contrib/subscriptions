@@ -366,6 +366,12 @@ function _subscriptions_mail_mail_alter(array &$message) {
     }
     $message['body'][0] = $msg;
   }
+  
+  if (variable_get('subscriptions_showmailkeys', 0)) {
+    $prefix = substr($message['body'][0], 0, 2);
+    $prefix = ( $prefix[1] == ' ' ? $prefix : '' );
+    $message['body'][0] = $message['body'][0] . $prefix . $message['id'] . "\n";
+  }
 
   /* Comment this line for debugging...
   dpm($message, 'drupal_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');
