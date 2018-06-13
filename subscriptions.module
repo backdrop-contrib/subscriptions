@@ -625,7 +625,13 @@ function subscriptions_delete_form(array $form, array &$form_state, $module, $fi
   $form['data'] = array('#type' => 'value', '#value' => array($module, $field, $value, $author_uid, $recipient_uid));
   // We might be called from subscriptions_del_form() and don't want to submit to subscriptions_del_form_submit():
   $form['#submit'][] = 'subscriptions_delete_form_submit';
-  return confirm_form($form, t('Are you sure you want to unsubscribe?'), '<front>', NULL, t('Unsubscribe'));
+  return confirm_form(
+    $form,
+    t('Are you sure you want to unsubscribe?'),
+    '<front>',
+    t('You can always resubscribe later. Any pending notifications may be lost.'),
+    t('Unsubscribe')
+  );
 }
 
 /**

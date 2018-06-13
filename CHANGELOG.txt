@@ -3,6 +3,8 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 
 subscriptions 7.x-1.x-dev:
+  Enhancements:
+    - #1301798 by ldpm: Fix inappropriate "This action cannot be undone" message on Unsubscribe by link.
 
 
 subscriptions 7.x-1.3 (2016-08-23):
