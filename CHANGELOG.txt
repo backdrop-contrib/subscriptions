@@ -7,10 +7,10 @@ subscriptions 7.x-1.x-dev:
 
 subscriptions 7.x-1.3 (2016-08-23):
   Enhancements:
-    - Fix broken 'Append the mailkey to every notification' option.
     - Create a dummy test to make the testbot happy.
   Bugs fixed:
     - Re-enable node options for subscribing to forum.
+    - Fix broken 'Append the mailkey to every notification' option.
     - Clear the internal taxonomy term cache when switching users in hook_cron().
 
 
