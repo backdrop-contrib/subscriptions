@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - Change the 'subscriptions_user.digest' default value to -1 (= use site default).
     - Suspend users being blocked.
     - Improve support for canceling users.
     - Warn the admin about the 'user_cancel_reassign' cancellation method.
