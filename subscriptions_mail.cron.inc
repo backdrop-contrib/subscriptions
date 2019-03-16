@@ -378,15 +378,23 @@ function _subscriptions_mail_mail_alter(array &$message) {
     $message['body'][0] = $msg;
   }
 
-  if (variable_get('subscriptions_showmailkeys', 0)) {
-    $prefix = substr($message['body'][0], 0, 2);
-    $prefix = ( $prefix[1] == ' ' ? $prefix : '' );
-    $message['body'][0] = $message['body'][0] . $prefix . $message['id'] . "\n";
-  }
+  $message['body'][0] = _subscriptions_mail_add_mailkey($message['body'][0], $message['id'], $message['language']->language);
 
   /* Comment this line for debugging...
   dpm($message, 'drupal_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');
   $message['to'] = '';
   /**/
+}
+
+/**
+ * Helper function to add the mailkey if enabled.
+ */
+function _subscriptions_mail_add_mailkey($body, $mailkey, $language = NULL) {
+  if (variable_get('subscriptions_showmailkeys', 0)) {
+    $prefix = substr($body, 0, 2);
+    $prefix = ( $prefix[1] == ' ' ? $prefix : '' );
+    $body .= $prefix . $mailkey . (empty($language) ? '' : '/' . $language) . "\n";
+  }
+  return $body;
 }
 
