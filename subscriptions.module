@@ -337,6 +337,18 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
 }
 
 /**
+ * Implements hook_user_cancel().
+ *
+ * @param array $edit
+ * @param object $account
+ *
+ * @ingroup hooks
+ */
+function subscriptions_user_cancel($edit, $account) {
+  subscriptions_user_delete($account);
+}
+
+/**
  * Implements hook_user_delete().
  *
  * @param object $account
@@ -344,6 +356,9 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
  * @ingroup hooks
  */
 function subscriptions_user_delete($account) {
+  db_delete('subscriptions_queue')
+    ->condition('uid', $account->uid)
+    ->execute();
   db_delete('subscriptions_user')
     ->condition('uid', $account->uid)
     ->execute();

@@ -48,13 +48,18 @@ function _subscriptions_mail_cron() {
       break;  // No more ready queue items, terminate loop.
     }
 
+    if (!$subscriber = user_load($queue_item['uid'])) {
+      $watchdog('subscriptions', t('Subscriber %uid not found.', array('%uid' => $queue_item['uid'])), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+
     $saved_user     = $user;
     $saved_language = $language;
     drupal_save_session(FALSE);
-    $user      = user_load($queue_item['uid']);
-    $lang_code = $language->language;
     // Clear the term cache to avoid getting a different user's set of terms.
     entity_load('taxonomy_term', array(), array(), TRUE);
+    $lang_code = $language->language;
+    $user      = $subscriber;
 
     $digest_data                      = array('subs' => array('type' => 'digest'));
     $watchdog_variables['%user_name'] = $user->name;
