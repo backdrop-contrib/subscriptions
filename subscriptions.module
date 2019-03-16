@@ -337,6 +337,25 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
 }
 
 /**
+ * Implements hook_user_update().
+ *
+ * Suspend notifications if the user is blocked.
+ *
+ * @param array $edit
+ * @param object $account
+ * @param null $category
+ *
+ * @ingroup hooks
+ */
+function subscriptions_user_update(&$edit, $account, $category) {
+  if ($account->status === '0' && $account->original->status === '1') {
+    // User is being blocked.
+    _subscriptions_module_load_include('subscriptions', 'admin.inc');
+    _subscriptions_user_suspend($account->uid, 2);
+  }
+}
+
+/**
  * Implements hook_user_cancel().
  *
  * @param array $edit
