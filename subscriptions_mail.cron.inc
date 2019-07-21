@@ -164,8 +164,10 @@ function _subscriptions_mail_cron() {
     drupal_save_session(TRUE);
   }
 
-  // Clear the term cache again for the next cron client.
-  entity_load('taxonomy_term', array(), array(), TRUE);
+  if (module_exists('taxonomy')) {
+    // Clear the term cache again for the next cron client.
+    entity_load('taxonomy_term', array(), array(), TRUE);
+  }
 
   if ($single_count + $digest_count + $single_failed + $digest_failed > 0) {
     $current_seconds = timer_read('page')/1000;
