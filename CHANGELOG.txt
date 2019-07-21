@@ -10,13 +10,14 @@ subscriptions 7.x-1.x-dev:
     - Improve support for canceling users.
     - Warn the admin about the 'user_cancel_reassign' cancellation method.
     - #1301798 by ldpm: Fix inappropriate "This action cannot be undone" message on Unsubscribe by link.
+  Bug fixed:
+    - #2907201 by jenlampton, salvis: Fatal error during cron: comment table doesn't exist.
 
 
 subscriptions 7.x-1.3 (2016-08-23):
   Enhancements:
     - Create a dummy test to make the testbot happy.
   Bugs fixed:
-    - #2907201 by jenlampton, salvis: Fatal error during cron: comment table doesn't exist.
     - Re-enable node options for subscribing to forum.
     - Fix broken 'Append the mailkey to every notification' option.
     - Clear the internal taxonomy term cache when switching users in hook_cron().
