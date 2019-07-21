@@ -529,13 +529,14 @@ function subscriptions_queue(array $event) {
           // author-specific subscriptions trigger on comments, when the node author is subscribed to:
           ->condition('s.author_uid', array(($module == 'node' && $event['type'] == 'comment' && isset($event['node']->uid) ? $event['node']->uid : $event['uid']) , -1), 'IN')
           ->groupBy('u.uid');
-        if (db_driver() == 'pgsql' || db_driver() == 'sqlsrv') {
-          $select
-            ->groupBy('u.uid')->groupBy('u.name')->groupBy('u.language')
-            ->groupBy('s.module')->groupBy('s.field')->groupBy('s.value')->groupBy('s.author_uid')->groupBy('s.send_interval')
-            ->groupBy('su.digest')->groupBy('su.suspended')
-            ->groupBy('last_sent');
-        }
+
+        // #2798015: "only_full_group_by" becomes standard in MySQL 5.7,
+        // just as for pgsql and sqlsrv.
+        $select
+          ->groupBy('u.uid')->groupBy('u.name')->groupBy('u.language')
+          ->groupBy('s.module')->groupBy('s.field')->groupBy('s.value')->groupBy('s.author_uid')->groupBy('s.send_interval')
+          ->groupBy('su.digest')->groupBy('su.suspended')
+          ->groupBy('last_sent');
 
         if (!empty($query['where'])) {
           foreach ($query['where'] as $cond) {
