@@ -11,6 +11,7 @@ subscriptions 7.x-1.x-dev:
     - Warn the admin about the 'user_cancel_reassign' cancellation method.
     - #1301798 by ldpm: Fix inappropriate "This action cannot be undone" message on Unsubscribe by link.
   Bug fixed:
+    - #2864152 by sonvir249, RickJ: Taxonomy tids not removed from database on deletion.
     - #2800885 by salvis: Cron fails when running Subscriptions Mail without Taxonomy.
     - #2798015 by salvis: Can't save any content while subscriptions module enabled (MySQL 5.7).
     - #2907201 by jenlampton, salvis: Fatal error during cron: comment table doesn't exist.
