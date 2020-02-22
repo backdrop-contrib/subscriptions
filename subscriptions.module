@@ -175,7 +175,7 @@ function subscriptions_menu() {
       'file' => 'subscriptions.admin.inc',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('subscriptions_page_form', SUBSCRIPTIONS_CONFIG_PATH_LEVEL + 2, $stype),
-      'access arguments' => array('administer site configuration'),
+      'access callback' => '_subscriptions_bulk_or_site_access',
       'weight' => $weight,
     );
     $items[SUBSCRIPTIONS_CONFIG_PATH . '/userdefaults/' . $stype]['title'] = $data['title'];
@@ -254,6 +254,16 @@ function _subscriptions_access($account, $access = NULL) {
 function _subscriptions_bulk_access() {
   return user_access('bulk-administer user subscriptions') && !empty($_SESSION['subscriptions']['bulk_op']);
 }
+
+/*
+ * Access callback for bulk operations or site configuration.
+ *
+ * @returns: bool
+ */
+function _subscriptions_bulk_or_site_access() {
+  return _subscriptions_bulk_access() || user_access('administer site configuration');
+}
+
 
 /**
  * Implements hook_permission().
