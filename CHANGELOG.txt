@@ -4,6 +4,7 @@ CHANGELOG for Subscriptions 1.x for Drupal 7
 
 subscriptions 7.x-1.x-dev:
   Enhancements:
+    - #1456560 by herved, mwallenberg, torrance123, timwood, salvis: Integration into OG (contrib).
     - #3115362 by salvis: Add token support for multi-value dates and user references.
     - Add the language to the mailkey.
     - Change the 'subscriptions_user.digest' default value to -1 (= use site default).

@@ -522,9 +522,14 @@ function subscriptions_queue(array $event) {
         $select->innerJoin('subscriptions_user', 'su', 's.recipient_uid = su.uid');
         $select->innerJoin('users', 'u', 'su.uid = u.uid');
         $select->leftJoin('subscriptions_last_sent', 'sls', 'su.uid = sls.uid AND s.send_interval = sls.send_interval');
+
         if (!empty($query['join'])) {
-          $select->innerJoin($query['join']['table'], $query['join']['alias'], $query['join']['on']);
+          $joins = isset($query['join']['table']) ? array($query['join']) : $query['join'];
+          foreach ($joins as $join) {
+            $select->innerJoin($join['table'], $join['alias'], $join['on']);
+          }
         }
+
         $select
           ->fields('u', array('uid', 'name', 'language'))
           ->fields('s', array('module', 'field', 'value', 'author_uid', 'send_interval'))
