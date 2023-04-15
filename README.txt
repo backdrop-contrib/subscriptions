@@ -40,7 +40,9 @@ Ported to Drupal 6 and continuously enhanced by salvis.
 Doxygen documentation by develCuy, sponsored by www.transit.york.ac.uk.
 Ported to Drupal 7 by salvis.
 
-http://drupalcontrib.org/drupal-7-modules provides on-line developer documentation.
+On-line developer documentation:
+https://web.archive.org/web/20171229174809/http://www.drupalcontrib.org/api/drupal/contributions%21subscriptions%21subscriptions.module/7
+https://web.archive.org/web/20171229225914/http://www.drupalcontrib.org/api/drupal/contributions%21subscriptions%21subscriptions_mail.module/7
 
 Initial Translations:
 - German:               salvis

@@ -1,5 +1,7 @@
 
 CHANGELOG for Subscriptions 1.x for Drupal 7
+  Bugs fixed:
+    - #3256574: Replaced stale link to drupalcontrib.org with links to web.archive.org.
 
 
 subscriptions 7.x-1.x-dev:
