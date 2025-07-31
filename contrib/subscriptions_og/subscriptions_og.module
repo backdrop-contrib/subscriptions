@@ -36,8 +36,8 @@ function subscriptions_og_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $arg2 =
       );
       return $types;
 
-    // Queue: Define parameters used by Subscriptions to query which
-    // subscriptions should be sent.
+      // Queue: Define parameters used by Subscriptions to query which
+      // subscriptions should be sent.
     case 'queue':
       if ($arg0['module'] == 'node') {
         $node = $arg0['node'];
@@ -156,12 +156,12 @@ function subscriptions_og_page(array $form, $uid) {
   $query = db_select('subscriptions', 's', array('fetch' => PDO::FETCH_ASSOC));
   $result = $query
     ->fields('s', array(
-      'value',
-      'send_interval',
-      'author_uid',
-      'send_comments',
-      'send_updates',
-    ))
+    'value',
+    'send_interval',
+    'author_uid',
+    'send_comments',
+    'send_updates',
+  ))
     ->condition('s.module', 'node')
     ->condition('s.field', 'group_audience')
     ->condition('s.recipient_uid', $uid)
@@ -222,6 +222,17 @@ function subscriptions_og_page(array $form, $uid) {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function subscriptions_og_config_info() {
+  $prefixes['subscriptions_og.settings'] = array(
+    'label' => t('Subscriptions settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_form_FROM_ID_alter().
  *
  * Adds checkbox to allow enable/disable autosubscriptions.
@@ -236,7 +247,7 @@ function subscriptions_og_form_subscriptions_settings_form_alter(&$form, &$form_
   $form['subscriptions_og']['subscriptions_og_autosubscribe'] = array(
     '#type' => 'checkbox',
     '#title' => 'Automatically subscribe/unsubscribe members of an organic group',
-    '#default_value' => variable_get('subscriptions_og_autosubscribe', FALSE),
+    '#default_value' => config_get('subscriptions_og.settings', 'subscriptions_og_autosubscribe'),
     '#description' => t('Automatically subscribe or unsubscribe users as the join or leave an organic group. This will not create subscriptions for existing organic group members.'),
   );
 }
@@ -245,7 +256,7 @@ function subscriptions_og_form_subscriptions_settings_form_alter(&$form, &$form_
  * Implements hook_og_membership_insert().
  */
 function subscriptions_og_og_membership_insert($og_membership) {
-  $autosubscribe = variable_get('subscriptions_og_autosubscribe', FALSE);
+  $autosubscribe = config_get('subscriptions_og.settings', 'subscriptions_og_autosubscribe');
   if ($autosubscribe && $og_membership->group_type == 'node' && $og_membership->entity_type == 'user') {
     $send_interval = _subscriptions_get_setting('send_interval', $og_membership->etid);
     $send_updates = _subscriptions_get_setting('send_updates', $og_membership->etid);
@@ -276,7 +287,7 @@ function subscriptions_og_og_membership_insert($og_membership) {
  * Implements hook_og_membership_delete().
  */
 function subscriptions_og_og_membership_delete($og_membership) {
-  $autosubscribe = variable_get('subscriptions_og_autosubscribe', FALSE);
+  $autosubscribe = config_get('subscriptions_og.settings', 'subscriptions_og_autosubscribe');
   if ($autosubscribe && $og_membership->group_type == 'node' && $og_membership->entity_type == 'user') {
     subscriptions_delete(
       // Recipient.

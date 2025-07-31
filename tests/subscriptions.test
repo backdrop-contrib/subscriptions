@@ -8,7 +8,7 @@
 /**
  * Test case for Subscriptions module.
  */
-class SubscriptionsWebTestCase extends DrupalWebTestCase {
+class SubscriptionsWebTestCase extends BackdropWebTestCase {
 
   /**
    * Implements getInfo().
@@ -28,8 +28,8 @@ class SubscriptionsWebTestCase extends DrupalWebTestCase {
    */
   function setUp() {
     parent::setUp('token', 'mail_edit', 'subscriptions', 'subscriptions_mail', 'subscriptions_content', 'subscriptions_taxonomy', 'subscriptions_ui', 'subscriptions_blog_ui');
-    $web_user = $this->drupalCreateUser(array('create page content'));
-    $this->drupalLogin($web_user);
+    $web_user = $this->backdropCreateUser(array('create page content'));
+    $this->backdropLogin($web_user);
   }
 
   /**

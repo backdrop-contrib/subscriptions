@@ -43,14 +43,14 @@ function subscriptions_blog_ui_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $a
  */
 function _subscriptions_blog_ui_types() {
   $types['blog'] = array(
-    'title'      => 'Blogs',
-    'page'       => 'subscriptions_blog_ui_page_blog',
-    'fields'     => array('node', 'type', 'blog'),
-    'weight'     => -3,
-    'access'     => 'subscribe to blogs',
+    'title' => 'Blogs',
+    'page' => 'subscriptions_blog_ui_page_blog',
+    'fields' => array('node', 'type', 'blog'),
+    'weight' => -3,
+    'access' => 'subscribe to blogs',
     'permission' => array(
-      'title'       => t('Subscribe to blogs'),
-      'description' => t('Use the dedicated @Blog_Subscriptions UI elements.', array('@Blog_Subscriptions' => 'Blog Subscriptions'))
+      'title' => t('Subscribe to blogs'),
+      'description' => t('Use the dedicated @Blog_Subscriptions UI elements.', array('@Blog_Subscriptions' => 'Blog Subscriptions')),
     ),
   );
   return $types;
@@ -101,7 +101,7 @@ function subscriptions_blog_ui_page_blog(array $form, $uid) {
   }
   $accounts = user_load_multiple($all_uids);
   foreach ($accounts as $account) {
-    $user_name = format_username($account);
+    $user_name = user_format_name($account);
     if (!$has_blog = in_array($account->uid, $uids)) {
       $user_name = check_plain($user_name);
     }
@@ -137,7 +137,7 @@ function _subscriptions_blog_ui_blog_form(array $blogs, array $form, $uid) {
   $bulk_op = (empty($_SESSION['subscriptions']['bulk_op']) ? '' : $_SESSION['subscriptions']['bulk_op']);
   if ($bulk_op) {
     // No initialization for bulk subscription.
-    $uid = -DRUPAL_AUTHENTICATED_RID;
+    $uid = -BACKDROP_AUTHENTICATED_RID;
   }
   else {
     $result = db_query("
@@ -159,7 +159,7 @@ function _subscriptions_blog_ui_blog_form(array $blogs, array $form, $uid) {
 
   $defaults = array();
   foreach ($blogs as $blog) {
-    $title = ($blog['has_blog'] ? l($blog['name'], 'blog/' . $blog['uid']) : $blog['name']);
+    $title = ($blog['has_blog']?l($blog['name'], 'blog/' . $blog['uid']) : $blog['name']);
     // add the active subscriptions
     if (!isset($subscriptions[$blog['uid']])) {
       // author-less item is missing -- add it here:
@@ -178,7 +178,10 @@ function _subscriptions_blog_ui_blog_form(array $blogs, array $form, $uid) {
   );
   subscriptions_form_column_filter($form[0], $uid);
 
-  $form['access_key'] = array('#type' => 'value', '#value' => 'blog');
+  $form['access_key'] = array(
+    '#type' => 'value',
+    '#value' => 'blog',
+  );
   return $form;
 }
 
@@ -196,5 +199,13 @@ function _subscriptions_blog_ui_blog_form(array $blogs, array $form, $uid) {
  */
 function subscriptions_blog_ui_subscriptions_counts_alter(array &$counts, $uid) {
   $counts['node']['blog'] = db_query("SELECT count(*) FROM {subscriptions} WHERE module = 'node' AND field = 'type' AND value = 'blog' AND author_uid <> -1 AND recipient_uid = :recipient_uid", array(':recipient_uid' => $uid))->fetchField();
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function subscriptions_blog_ui_autoload_info() {
+  return array(
+  );
 }
 

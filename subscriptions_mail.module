@@ -15,7 +15,7 @@
 function subscriptions_mail_menu() {
   $items[SUBSCRIPTIONS_CONFIG_PATH . '/purge-queue'] = array(
     'file' => 'subscriptions_mail.admin.inc',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('_subscriptions_mail_purge_queue_form'),
     'access callback' => 'user_access',
     'access arguments' => array('administer site configuration'),
@@ -68,11 +68,12 @@ function subscriptions_mail_mail_alter(array &$message) {
  * @return string
  */
 function _subscriptions_mail_site_mail($address_only = FALSE) {
-  $email = variable_get('subscriptions_site_mail', '');
+  $config = config('subscriptions.settings');
+  $email = $config->get('subscriptions_site_mail');
   if (empty($email)) {
-    $email = variable_get('site_mail', ini_get('sendmail_from'));
+    $email = config_get('system.performance', 'site_mail');
   }
-  if (!$address_only && ($name = variable_get('subscriptions_site_mail_name', FALSE))) {
+  if (!$address_only && ($name = $config->get('subscriptions_site_mail_name'))) {
     $email = '"' . $name . '" <' . $email . '>';
   }
   return $email;
@@ -100,7 +101,7 @@ function subscriptions_mail_form_subscriptions_settings_form_alter(array &$form,
  */
 function _subscriptions_mail_purge_queue_form(array $form_state) {
   $form['#submit'][] = 'subscriptions_purge_queue';
-  return confirm_form($form, t('Are you sure you want to purge the @Subscriptions queue?', array('@Subscriptions' => 'Subscriptions')), array('path' => drupal_get_destination(), 'fragment' => 'edit-purge-queue'), NULL, t('Purge the queue'));
+  return confirm_form($form, t('Are you sure you want to purge the @Subscriptions queue?', array('@Subscriptions' => 'Subscriptions')), array('path' => backdrop_get_destination(), 'fragment' => 'edit-purge-queue'), NULL, t('Purge the queue'));
 }
 
 /**
@@ -108,9 +109,12 @@ function _subscriptions_mail_purge_queue_form(array $form_state) {
  */
 function subscriptions_purge_queue() {
   $count = db_delete('subscriptions_queue')->execute();
-  $variables = array('@Subscriptions' => 'Subscriptions', '%count' => $count);
-  drupal_set_message(t('All %count items have been purged.', $variables));
-  $watchdog = 'watchdog';  // keep potx from translating 'cron'
+  $variables = array(
+    '@Subscriptions' => 'Subscriptions',
+    '%count' => $count,
+  );
+  backdrop_set_message(t('All %count items have been purged.', $variables));
+  $watchdog = 'watchdog'; // keep potx from translating 'cron'
   $watchdog('cron', t('@Subscriptions: all %count items have been purged.', $variables), NULL, WATCHDOG_WARNING);
 }
 
@@ -177,7 +181,7 @@ function subscriptions_mail_mail_edit_token_types($mailkey, $options = array()) 
  * @return int
  */
 function subscriptions_mail_get_cron_percentage() {
-  return max(array(0, intval(variable_get('subscriptions_cron_percent', 50))));
+  return max(array(0, intval(config_get('subscriptions.settings', 'subscriptions_cron_percent'))));
 }
 
 /**
@@ -210,32 +214,32 @@ function subscriptions_mail_modules_installed($modules) {
   }
 }
 
-  /**
-   * Implements hook_mail_edit_form_extra().
-   *
-   * Customize Mail Editor's edit template page.
-   *
-   * @param $form
-   * @param $form_state
-   * @param $mailkey
-   * @param $template
-   */
+/**
+ * Implements hook_mail_edit_form_extra().
+ *
+ * Customize Mail Editor's edit template page.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $mailkey
+ * @param $template
+ */
 function subscriptions_mail_mail_edit_form_extra(&$form, &$form_state, $mailkey, $template) {
   _subscriptions_mail_module_load_include('mail_edit.inc');
   _subscriptions_mail_mail_edit_form_extra($form, $form_state, $mailkey, $template);
 }
 
-  /**
-   * Implements hook_form_alter().
-   *
-   * Adds the digest parts to the subscriptions_mail_digest mail_edit page.
-   *
-   * @param $form
-   * @param $form_state
-   *
-   * @ingroup hooks
-   * @ingroup form
-   */
+/**
+ * Implements hook_form_alter().
+ *
+ * Adds the digest parts to the subscriptions_mail_digest mail_edit page.
+ *
+ * @param $form
+ * @param $form_state
+ *
+ * @ingroup hooks
+ * @ingroup form
+ */
 function subscriptions_mail_form_mail_edit_template_form_alter(&$form, &$form_state) {
   _subscriptions_mail_module_load_include('mail_edit.inc');
   _subscriptions_mail_form_mail_edit_template_form_alter($form, $form_state);
@@ -281,10 +285,10 @@ function _subscriptions_mail_check_baseurl($interactive) {
   if (empty($_POST) && preg_match('!//($|/|localhost/|([0-9]{1,3}\.){3}[0-9]{1,3}/)!', $url)) {
     $msg = t('Your installation returns %url as the base URL of the site. This is probably not what you want, and it can usually be fixed by setting the %variable variable in your %file file.', array('%url' => $url, '%variable' => '$base_url', '%file' => 'settings.php'));
     if ($interactive) {
-      drupal_set_message($msg, 'error');
+      backdrop_set_message($msg, 'error');
     }
     else {
-      $watchdog = 'watchdog';  // keep potx from translating 'cron'
+      $watchdog = 'watchdog'; // keep potx from translating 'cron'
       $watchdog('cron', $msg . ' ' . t('If it happens only when running from cron, then it could be due to a mis-configuration of your cron job.'), NULL, WATCHDOG_ERROR);
     }
   }
@@ -308,4 +312,12 @@ function subscriptions_mail_entity_info_alter(&$entity_info) {
       ),
     );
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function subscriptions_mail_autoload_info() {
+  return array(
+  );
 }

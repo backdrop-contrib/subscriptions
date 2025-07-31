@@ -18,6 +18,7 @@
  * @ingroup form
  */
 function _subscriptions_content_form_subscriptions_settings_form_alter(array &$form, array &$form_state) {
+  $config = config('subscriptions.settings');
   $tr = 't';
 
   // General content settings
@@ -34,38 +35,38 @@ function _subscriptions_content_form_subscriptions_settings_form_alter(array &$f
     '#weight' => -10,
   );
   $form['content']['subscriptions_unlisted_content_types'] = array(
-    '#type'          => 'select',
-    '#title'         => t('Unlisted content types'),
-    '#default_value' => variable_get('subscriptions_unlisted_content_types', array()),
-    '#options'       => $select,
-    '#description'   => t('Select the content types which should be <strong>removed from subscriptions listings</strong>.<br />The content may still be available for subscribing via different kinds of subscriptions, but subscribing by content type will be unavailable for the selected types.'),
-    '#multiple'      => TRUE,
+    '#type' => 'select',
+    '#title' => t('Unlisted content types'),
+    '#default_value' => $config->get('subscriptions_unlisted_content_types'),
+    '#options' => $select,
+    '#description' => t('Select the content types which should be <strong>removed from subscriptions listings</strong>.<br />The content may still be available for subscribing via different kinds of subscriptions, but subscribing by content type will be unavailable for the selected types.'),
+    '#multiple' => TRUE,
   );
   $form['content']['subscriptions_blocked_content_types'] = array(
-    '#type'          => 'select',
-    '#title'         => t('Blocked content types'),
-    '#default_value' => variable_get('subscriptions_blocked_content_types', array()),
-    '#options'       => $select,
-    '#description'   => t('Select the content types which should be <strong>completely unavailable for subscribing</strong>, i.e. content of the selected types will never trigger notifications for regular users.'),
-    '#multiple'      => TRUE,
+    '#type' => 'select',
+    '#title' => t('Blocked content types'),
+    '#default_value' => $config->get('subscriptions_blocked_content_types'),
+    '#options' => $select,
+    '#description' => t('Select the content types which should be <strong>completely unavailable for subscribing</strong>, i.e. content of the selected types will never trigger notifications for regular users.'),
+    '#multiple' => TRUE,
   );
   $form['content']['subscriptions_blocked_content_types_note'] = array(
-    '#type'          => 'item',
-    '#title'         => t('Note'),
-    '#markup'        => t("The %permission permission grants normal access to unlisted and blocked content types; this is intended as an administrative function, and the content types and links will be marked with a '!symbol' symbol (and appear !red_ON like this !red_OFF in the case of blocked types).", array('%permission' => t('subscribe to all content types'), '!symbol' => SUBSCRIPTIONS_UNAVAILABLE, '!red_ON' => '<span class="error">', '!red_OFF' => '</span>')),
+    '#type' => 'item',
+    '#title' => t('Note'),
+    '#markup' => t("The %permission permission grants normal access to unlisted and blocked content types; this is intended as an administrative function, and the content types and links will be marked with a '!symbol' symbol (and appear !red_ON like this !red_OFF in the case of blocked types).", array('%permission' => t('subscribe to all content types'), '!symbol' => SUBSCRIPTIONS_UNAVAILABLE, '!red_ON' => '<span class="error">', '!red_OFF' => '</span>')),
   );
   $form['content']['subscriptions_blocked_nodes'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Blocked nodes'),
-    '#size'          => 100,
-    '#maxlength'     => 1000,
-    '#default_value' => variable_get('subscriptions_blocked_nodes', ''),
-    '#description'   => t('Enter the IDs of nodes that should be <strong>completely unavailable for subscribing</strong>, separated by spaces.'),
+    '#type' => 'textfield',
+    '#title' => t('Blocked nodes'),
+    '#size' => 100,
+    '#maxlength' => 1000,
+    '#default_value' => $config->get('subscriptions_blocked_nodes'),
+    '#description' => t('Enter the IDs of nodes that should be <strong>completely unavailable for subscribing</strong>, separated by spaces.'),
   );
   $form['#validate'][] = '_subscriptions_content_validate_blocked_nodes';
 
-  $statics = variable_get('subscriptions_static_content_types', array());
-  $avoid_empty_subscribe_links = variable_get('subscriptions_avoid_empty_subscribe_links', 0);
+  $statics = $config->get('subscriptions_static_content_types');
+  $avoid_empty_subscribe_links = $config->get('subscriptions_avoid_empty_subscribe_links');
   $form['content']['static_content'] = array(
     '#type' => 'fieldset',
     '#title' => t('Static content'),
@@ -73,18 +74,18 @@ function _subscriptions_content_form_subscriptions_settings_form_alter(array &$f
     '#collapsed' => (empty($statics) || (count($statics) == 1 && isset($statics[0]))) && !$avoid_empty_subscribe_links,
   );
   $form['content']['static_content']['subscriptions_static_content_types'] = array(
-    '#type'          => 'select',
-    '#title'         => t('Static content types'),
+    '#type' => 'select',
+    '#title' => t('Static content types'),
     '#default_value' => $statics,
-    '#options'       => $select,
-    '#description'   => t('Select the content types which do not change nor receive comments and thus should not have the %option option.', array('%option' => t('Subscribe to this page'))),
-    '#multiple'      => TRUE,
+    '#options' => $select,
+    '#description' => t('Select the content types which do not change nor receive comments and thus should not have the %option option.', array('%option' => t('Subscribe to this page'))),
+    '#multiple' => TRUE,
   );
   $form['content']['static_content']['subscriptions_avoid_empty_subscribe_links'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Avoid empty %Subscribe links', array('%Subscribe' => t('Subscribe'))),
+    '#type' => 'checkbox',
+    '#title' => t('Avoid empty %Subscribe links', array('%Subscribe' => t('Subscribe'))),
     '#default_value' => $avoid_empty_subscribe_links,
-    '#description'   => t('Nodes of %Static_content_types may end up with no %Subscribe options at all. Turn this option on to avoid displaying %Subscribe links in this case. The default is OFF, because this option causes processing overhead for each node view operation.', array('%Static_content_types' => t('Static content types'), '%Subscribe' => t('Subscribe'))),
+    '#description' => t('Nodes of %Static_content_types may end up with no %Subscribe options at all. Turn this option on to avoid displaying %Subscribe links in this case. The default is OFF, because this option causes processing overhead for each node view operation.', array('%Static_content_types' => t('Static content types'), '%Subscribe' => t('Subscribe'))),
   );
 }
 
@@ -229,7 +230,10 @@ function _subscriptions_content_node_form(array $form, $uid) {
       '#value' => $defaults,
     );
     subscriptions_form_column_filter($form[0], $uid);
-    $form['note'] = array('#type' => 'item', '#description' => '<div>' . t('Note: Deactivated subscriptions will be removed from the list.') . '</div>' );
+    $form['note'] = array(
+      '#type' => 'item',
+      '#description' => '<div>' . t('Note: Deactivated subscriptions will be removed from the list.') . '</div>',
+    );
     $form['pager'] = array('#markup' => theme('pager', array('tags' => NULL, 'element' => 0, 'quantity' => 50)));
   }
   else {
@@ -250,31 +254,35 @@ function _subscriptions_content_node_form(array $form, $uid) {
  * @ingroup form
  */
 function _subscriptions_content_type_form(array $form, $uid) {
+  $config = config('subscriptions.settings');
   $subscriptions = array();
   $bulk_op = (empty($_SESSION['subscriptions']['bulk_op']) ? '' : $_SESSION['subscriptions']['bulk_op']);
   if ($bulk_op) {
     // No initialization for bulk subscription.
-    $uid = -DRUPAL_AUTHENTICATED_RID;
+    $uid = -BACKDROP_AUTHENTICATED_RID;
   }
   else {
     $query = db_select('subscriptions', 's', array('fetch' => PDO::FETCH_ASSOC));
-    $nt_alias = $query->join('node_type', 'nt', 's.value = nt.type');
     $result = $query
       ->fields('s', array('value', 'send_interval', 'author_uid', 'send_comments', 'send_updates'))
-      ->fields($nt_alias, array('type', 'name'))
       ->condition('s.module', 'node')
       ->condition('s.field', 'type')
       ->condition('s.recipient_uid', $uid)
-      ->addTag('node_type_access')
       ->orderBy('s.author_uid')
       ->execute();
+
+    // Load all node types via Backdrop config
+    $node_types = node_type_get_types(); // Array of node type objects keyed by machine name
+
     foreach ($result as $s) {
+      // Assign content type name from config if it exists, else fallback to machine name
+      $s['name'] = isset($node_types[$s['value']]) ? $node_types[$s['value']]->name : $s['value'];
       $subscriptions[$s['value']][$s['author_uid']] = $s;
     }
   }
-  $unlisteds = variable_get('subscriptions_unlisted_content_types', array());
+  $unlisteds = $config->get('subscriptions_unlisted_content_types');
   /** @var $blockeds array */
-  $blockeds = variable_get('subscriptions_blocked_content_types', array());
+  $blockeds = $config->get('subscriptions_blocked_content_types');
   $omits = array_merge($unlisteds, $blockeds);
   $form[0] = array(
     '#theme' => 'subscriptions_form_table',

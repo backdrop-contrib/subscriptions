@@ -20,5 +20,23 @@ function subscriptions_og_disable() {
  * Implements hook_uninstall().
  */
 function subscriptions_og_uninstall() {
-  variable_del('subscriptions_og_autosubscribe');
+  config_clear('subscriptions_og.settings', 'subscriptions_og_autosubscribe');
+}
+
+/**
+ * Migrate subscriptions_og variables to config.
+ */
+function subscriptions_og_update_1000() {
+  $config = config('subscriptions_og.settings');
+  $config->set('subscriptions_og_autosubscribe', update_variable_get('subscriptions_og_autosubscribe', array()));
+  $config->save();
+
+  update_variable_del('subscriptions_og_autosubscribe');
+}
+
+/**
+ * Implements hook_install().
+ */
+function subscriptions_og_install() {
+  // Dynamically generated variable data was detected.
 }

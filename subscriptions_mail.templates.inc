@@ -15,22 +15,27 @@ define('SUBSCRIPTIONS_DIGEST_MAILKEY', 'digest');
 function subscriptions_mail_template_raw($key, $langcode) {
   switch ($key) {
 
-    case 'SEP':      return // SUBSCRIPTIONS_DEFAULT_SEPARATOR
+    case 'SEP':
+      return // SUBSCRIPTIONS_DEFAULT_SEPARATOR
 t('| ---------------------------------------------------', array(), array('langcode' => $langcode));
 
-    case 'SEPD':     return // SUBSCRIPTIONS_DIGEST_SEPARATOR
+    case 'SEPD':
+      return // SUBSCRIPTIONS_DIGEST_SEPARATOR
 t('=====================================================', array(), array('langcode' => $langcode));
 
-    case 'SUBJ':     return // SUBSCRIPTIONS_DEFAULT_SUBJECT
+    case 'SUBJ':
+      return // SUBSCRIPTIONS_DEFAULT_SUBJECT
 t('[[site:name]] [subs:type] subscription for [current-user:name]: [node:title]', array(), array('langcode' => $langcode));
 
-    case 'FOOT':     return // SUBSCRIPTIONS_DEFAULT_FOOTER
+    case 'FOOT':
+      return // SUBSCRIPTIONS_DEFAULT_FOOTER
 t('| This is an automated message. Please do NOT reply to the sender address!
 | To manage your subscriptions go to
 | [subs:manage-url]
 ', array(), array('langcode' => $langcode));
 
-    case 'BODY':     return // SUBSCRIPTIONS_DEFAULT_BODY
+    case 'BODY':
+      return // SUBSCRIPTIONS_DEFAULT_BODY
 t('{{MAIL@| Greetings, [current-user:name].
 |
 | Your subscription on [site:name]
@@ -62,7 +67,8 @@ t('{{MAIL@| Greetings, [current-user:name].
 | [subs:unsubscribe-url]
 {{MAIL@!FOOTER}}', array('!SEPARATOR' => subscriptions_mail_template_raw('SEP', $langcode), '!FOOTER' => subscriptions_mail_template_raw('FOOT', $langcode)), array('langcode' => $langcode));
 
-    case 'CITEM':    return // SUBSCRIPTIONS_DEFAULT_COMMENT_ITEM
+    case 'CITEM':
+      return // SUBSCRIPTIONS_DEFAULT_COMMENT_ITEM
 t('| {{[subs:is-new]?New:Updated}} {{[subs:is-published]?:UNPUBLISHED }}comment:
 | Author: [comment:author:name]
 | Title: [comment:title]
@@ -73,10 +79,12 @@ t('| {{[subs:is-new]?New:Updated}} {{[subs:is-published]?:UNPUBLISHED }}comment:
 {{[subs:files:field_files:count]#| [subs:files:field_files:index:#0:url]
 }}}}!SEPARATOR', array('!SEPARATOR' => subscriptions_mail_template_raw('SEP', $langcode)), array('langcode' => $langcode));
 
-    case 'DSUBJ':    return // SUBSCRIPTIONS_DEFAULT_DIGEST_SUBJECT
+    case 'DSUBJ':
+      return // SUBSCRIPTIONS_DEFAULT_DIGEST_SUBJECT
 t('[[site:name]] Subscriptions Digest for [current-user:name]', array(), array('langcode' => $langcode));
 
-    case 'DBODY':    return // SUBSCRIPTIONS_DEFAULT_DIGEST_BODY
+    case 'DBODY':
+      return // SUBSCRIPTIONS_DEFAULT_DIGEST_BODY
 t('| Greetings, [current-user:name].
 |
 | Your subscriptions on [site:name]
@@ -91,6 +99,10 @@ t('| Greetings, [current-user:name].
   return NULL;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function subscriptions_mail_template($key, $langcode) {
   static $templates;
   if (!isset($templates[$langcode][$key])) {

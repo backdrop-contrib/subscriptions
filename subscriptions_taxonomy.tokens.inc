@@ -52,7 +52,7 @@ function subscriptions_taxonomy_tokens($type, $tokens, array $data = array(), ar
 
     foreach ($tokens as $name => $original) {
       switch ($name) {
-          // Default values for the chained tokens handled below.
+        // Default values for the chained tokens handled below.
         case 'category':
           //$replacements[$original] = $sanitize ? filter_xss($term->name) : $term->name;
           $replacements[$original] = render(taxonomy_term_view($term, 'full', $language_code));

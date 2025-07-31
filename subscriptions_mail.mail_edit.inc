@@ -23,15 +23,15 @@ function _subscriptions_mail_mail_edit_text($mailkey, $language) {
   switch ($mailkey) {
     case '.DEFAULT':
       $return = array(
-        'subject'                    => subscriptions_mail_template('SUBJ', $langcode),
-        'body'                       => subscriptions_mail_template('BODY', $langcode),
+        'subject' => subscriptions_mail_template('SUBJ', $langcode),
+        'body' => subscriptions_mail_template('BODY', $langcode),
         'subscriptions_comment_body' => subscriptions_mail_template('CITEM', $langcode),
       );
       break;
     case 'digest':
       $return = array(
         'subject' => subscriptions_mail_template('DSUBJ', $langcode),
-        'body'    => subscriptions_mail_template('DBODY', $langcode),
+        'body' => subscriptions_mail_template('DBODY', $langcode),
       );
       break;
     default:
@@ -56,7 +56,7 @@ function _subscriptions_mail_mail_edit_text($mailkey, $language) {
  */
 function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array()) {
   global $language;
-  $massage_tokens = &drupal_static('subscriptions_mail_massage_tokens');
+  $massage_tokens = &backdrop_static('subscriptions_mail_massage_tokens');
   $massage_tokens = FALSE;
 
   if (module_exists('token')) {
@@ -65,9 +65,9 @@ function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array())
     cache_clear_all('tree-rendered:', 'cache_token', TRUE);
     cache_clear_all('tree:subs:', 'cache_token', TRUE);
     cache_clear_all("info:{$language->language}", 'cache_token');
-    $token_get_info = &drupal_static('token_get_info');
+    $token_get_info = &backdrop_static('token_get_info');
     $token_get_info = NULL;
-    $token_info = &drupal_static('token_info');
+    $token_info = &backdrop_static('token_info');
     $token_info = NULL;
     // We want to poison token.module's caches now!
     $massage_tokens = TRUE;
@@ -80,7 +80,7 @@ function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array())
   }
 
   $token_types = module_invoke_all('subscriptions', 'token_types', substr($mailkey, 19));
-  $token_types = array_merge($token_types, ($mailkey == 'subscriptions_mail_digest' ? array('subs') : array('user', 'subs')));
+  $token_types = array_merge($token_types, ($mailkey == 'subscriptions_mail_digest'?array('subs') : array('user', 'subs')));
   return $token_types;
 }
 
@@ -124,13 +124,13 @@ function _subscriptions_mail_mail_edit_form_extra(array &$form, array &$form_sta
     ));
     $comment_description = t('This template formats one comment for inclusion in the @Body template above. Recommended tokens:<ul><li>@t1, @t2, @t3, @t4, and @t5, if available,</li> <li>@t6 and @t7.</li></ul>', array(
       '@Body' => t('Body'),
-      '@t1'   => '[subs:is-new]',
-      '@t2'   => '[subs:is-updated]',
-      '@t3'   => '[subs:is-published]',
-      '@t4'   => '[subs:type]',
-      '@t5'   => '[subs:files:field_FILES]',
-      '@t6'   => '[comment:*]',
-      '@t7'   => '[comment:author:*]',
+      '@t1' => '[subs:is-new]',
+      '@t2' => '[subs:is-updated]',
+      '@t3' => '[subs:is-published]',
+      '@t4' => '[subs:type]',
+      '@t5' => '[subs:files:field_FILES]',
+      '@t6' => '[comment:*]',
+      '@t7' => '[comment:author:*]',
     ));
     $node_type_id = 'subscriptions_mail_node-type-';
     if (strpos($form['id']['#value'], $node_type_id) === 0) {
@@ -145,18 +145,18 @@ function _subscriptions_mail_mail_edit_form_extra(array &$form, array &$form_sta
         '@t8' => '[subs:view]',
         '%Subscriptions' => t('Subscriptions'),
         '!link' => url("admin/structure/types/manage/$content_type/comment/display"),
-       )) . $note;
+      )) . $note;
     }
     $form['mail']['body']['#description'] = $description;
 
     if (isset($template['subscriptions_comment_body'])) {
       $form['mail']['subscriptions_comment_body'] = array(
-        '#title'         => module_exists('comment') ? t('Comment') : t('@Comment (unused because @Comment module is disabled on this site)', array('@Comment' => t('Comment'))),
-        '#type'          => 'textarea',
+        '#title' => module_exists('comment')?t('Comment') : t('@Comment (unused because @Comment module is disabled on this site)', array('@Comment' => t('Comment'))),
+        '#type' => 'textarea',
         '#default_value' => $template['subscriptions_comment_body'],
-        '#rows'          => 5,
-        '#description'   => $comment_description,
-        '#weight'        => 5,
+        '#rows' => 5,
+        '#description' => $comment_description,
+        '#weight' => 5,
       );
     }
   }
@@ -178,24 +178,24 @@ function _subscriptions_mail_form_mail_edit_template_form_alter(&$form, &$form_s
   $type_ = 'subscriptions_mail_node-type-';
   if (strpos($mailkey, $type_) === 0) {
     $form['content_type'] = array(
-      '#type'  => 'hidden',
+      '#type' => 'hidden',
       '#value' => substr($mailkey, strlen($type_)),
     );
   }
 
   if (isset($form_state['template_preview'])) {
     $form['template_preview'] = array(
-      '#type'        => 'fieldset',
-      '#title'       => t('Template preview'),
+      '#type' => 'fieldset',
+      '#title' => t('Template preview'),
       '#collapsible' => TRUE,
-      '#weight'      => -5,
+      '#weight' => -5,
     )
     + $form_state['template_preview'];
   }
 
   $form['preview'] = array(
-    '#type'   => 'submit',
-    '#value'  => t('Preview template'),
+    '#type' => 'submit',
+    '#value' => t('Preview template'),
     '#submit' => array('subscriptions_mail_preview'),
     '#weight' => 7,
   );
@@ -210,7 +210,7 @@ function _subscriptions_mail_form_mail_edit_template_form_alter(&$form, &$form_s
 function _subscriptions_mail_preview(array $form, array &$form_state) {
   $values = $form_state['values'];
   if (isset($values['preview_mode'])) {
-    variable_set('subscriptions_preview_mode', $values['preview_mode']);
+    config_set('subscriptions.settings', 'subscriptions_preview_mode', $values['preview_mode']);
   }
   $form_state['template_preview'] = _subscriptions_mail_preview_form($values);
   $form_state['rebuild'] = TRUE;
@@ -224,13 +224,14 @@ function _subscriptions_mail_preview(array $form, array &$form_state) {
  * @return array
  */
 function _subscriptions_mail_preview_form(array $values) {
+  $config = config('subscriptions.settings');
   global $user;
 
   _subscriptions_module_load_include('subscriptions_mail', 'cron.inc');
   $language_list = language_list();
   $language = $language_list[$values['language']];
   $is_digest = $values['id'] == 'subscriptions_mail_digest';
-  $preview_mode = variable_get('subscriptions_preview_mode', 'text');
+  $preview_mode = $config->get('subscriptions_preview_mode');
   $digest_data = array('subs' => array('type' => 'digest'));
 
   $query = db_select('node', 'n')
@@ -246,20 +247,20 @@ function _subscriptions_mail_preview_form(array $values) {
   foreach ($query->execute() as $row) {
     // This code is adapted from _subscriptions_mail_cron().
     $queue_item = array(
-      'sqid'          => 0,
-      'uid'           => $user->uid,
-      'name'          => check_plain(format_username($user)),
-      'language'      => $user->language,
-      'module'        => 'node',
-      'field'         => 'nid',
-      'value'         => $row->nid,
-      'author_uid'    => -1,
+      'sqid' => 0,
+      'uid' => $user->uid,
+      'name' => check_plain(user_format_name($user)),
+      'language' => $user->language,
+      'module' => 'node',
+      'field' => 'nid',
+      'value' => $row->nid,
+      'author_uid' => -1,
       'send_interval' => 1,
-      'digest'        => $is_digest,
-      'load_args'     => $row->nid,
+      'digest' => $is_digest,
+      'load_args' => $row->nid,
       'load_function' => 'subscriptions_content_load_node',
-      'is_new'        => 1,
-      'mail'          => $user->mail,
+      'is_new' => 1,
+      'mail' => $user->mail,
     );
     $load_function = $queue_item['load_function'];
     if ($load_function($queue_item)) {
@@ -274,7 +275,7 @@ function _subscriptions_mail_preview_form(array $values) {
           if (!empty($cids)) {
             foreach (comment_load_multiple($cids) as $comment) {
               // Fake every other comment as new.
-              $comment->_subscriptions_is_new = $comment->cid%2;
+              $comment->_subscriptions_is_new = $comment->cid % 2;
               $node->_subscriptions_comments[] = $comment;
             }
           }
@@ -290,16 +291,16 @@ function _subscriptions_mail_preview_form(array $values) {
         }
         $data = array(
           'subs' => array(
-            'type'             => $fields[$field]['subs_type'],
+            'type' => $fields[$field]['subs_type'],
             'unsubscribe_path' => 's/del/...',
-            'subs-module'      => 'MODULE',
-            'subs-field'       => 'FIELD',
-            'subs-value'       => 'VALUE',
+            'subs-module' => 'MODULE',
+            'subs-field' => 'FIELD',
+            'subs-value' => 'VALUE',
           ),
           'user' => user_load(!empty($node->revision_uid) ? $node->revision_uid : $node->uid),
         );
         $data_function($data, $node, $queue_item);
-        drupal_alter('subscriptions_data', $data, $node, $queue_item);
+        backdrop_alter('subscriptions_data', $data, $node, $queue_item);
         if ($is_digest) {
           // Accumulate up to three digest items in $digest_data and ultimately
           // pass them out of the loop as $data.
@@ -336,12 +337,12 @@ function _subscriptions_mail_preview_form(array $values) {
     $data['template']['subscriptions_comment_body'] = $comment_template;
   }
   $body = mail_edit_format($body_template, $data, array('language' => $language));
-  if (variable_get('subscriptions_showmailkeys', FALSE)) {
+  if ($config->get('subscriptions_showmailkeys')) {
     $body .= '| ' . $mailkey . "\n";
   }
   switch ($preview_mode) {
     case 'text':
-      $body = drupal_html_to_text($body);
+      $body = backdrop_html_to_text($body);
     case 'html-raw':
       $body = check_plain($body);
       $body = '<pre>' . $body . '</pre>';
@@ -358,21 +359,21 @@ function _subscriptions_mail_preview_form(array $values) {
     '#markup' => $body,
   );
   $form['preview_mode'] = array(
-    '#type'          => 'select',
-    '#prefix'        => '<div style="float: left; margin-right: 2em;">',
-    '#suffix'        => '</div>',
-    '#title'         => t('Preview mode'),
+    '#type' => 'select',
+    '#prefix' => '<div style="float: left; margin-right: 2em;">',
+    '#suffix' => '</div>',
+    '#title' => t('Preview mode'),
     '#default_value' => $preview_mode,
-    '#options'       => array(
-      'text'             => t('Text (default)'),
-      'html-raw'         => t('Raw HTML'),
-      'html-rendered'    => t('Rendered HTML'),
+    '#options' => array(
+      'text' => t('Text (default)'),
+      'html-raw' => t('Raw HTML'),
+      'html-rendered' => t('Rendered HTML'),
       'html-rendered-nl' => t('Rendered HTML with line breaks'),
     ),
   );
   $form['preview_mode_info'] = array(
     '#type' => 'item',
-    '#description' => t("The input to drupal_mail() is HTML. Drupal's default mail system converts it to text before sending it out as an email message. Sending HTML mail is possible by installing an alternative mail system and converting the template to HTML.", array('@drupal_mail' => 'drupal_mail()')) . ' ' .
+    '#description' => t("The input to backdrop_mail() is HTML. Backdrop's default mail system converts it to text before sending it out as an email message. Sending HTML mail is possible by installing an alternative mail system and converting the template to HTML.", array('@backdrop_mail' => 'backdrop_mail()')) . ' ' .
                       t("The @t1 tokens provide customizable rendered views, which may be easier to maintain than writing HTML.", array('@t1' => '[subs:view]')),
   );
   return $form;

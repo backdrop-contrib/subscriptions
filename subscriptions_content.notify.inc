@@ -26,7 +26,7 @@ function _subscriptions_content_load($nid, $comment_load_sqid = NULL) {
 
   $watchdog = 'watchdog';
   if (empty($node)) {
-    if (variable_get('subscriptions_watchall', 0)) {
+    if (config_get('subscriptions.settings', 'subscriptions_watchall')) {
       $watchdog('subscriptions', t('User %user_name was unable or not allowed to load node/%nid.', array('%user_name' => $user->name, '%nid' => $nid)), NULL, WATCHDOG_DEBUG);
     }
   }
@@ -58,7 +58,8 @@ function _subscriptions_content_load($nid, $comment_load_sqid = NULL) {
         if ($cutoff_sqid = db_query_range("SELECT sqid FROM {subscriptions_queue} WHERE module = 'node' AND field = 'nid' AND value = :value AND uid = :uid AND load_function = 'subscriptions_content_load_node' AND sqid > :sqid", 0, 1, array(
           ':value' => $nid,
           ':uid' => $user->uid,
-          ':sqid' => $comment_load_sqid))->fetchField()
+          ':sqid' => $comment_load_sqid,
+        ))->fetchField()
         ) {
           $query->condition('sq.sqid', $cutoff_sqid, '<');
         }

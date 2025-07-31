@@ -4,6 +4,7 @@ package = "Subscriptions"
 
 dependencies[] = subscriptions
 dependencies[] = mail_edit
-dependencies[] = token
+# dependencies[] = token
 
-core = 7.x
+backdrop = 1.x
+type = module

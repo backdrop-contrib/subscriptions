@@ -11,7 +11,10 @@
  * @return array
  */
 function subscriptions_token_info() {
-  $variables = array('%TYPE' => 'TYPE', '!TYPE' => 'TYPE');
+  $variables = array(
+    '%TYPE' => 'TYPE',
+    '!TYPE' => 'TYPE',
+  );
   $info = array(
     'types' => array(
       'subs' => array(
@@ -208,7 +211,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       }
     }
 
-      // Chained token relationships.
+    // Chained token relationships.
     if ($url_tokens = token_find_with_prefix($tokens, 'manage-url')) {
       $replacements += token_generate('url', $url_tokens, array('path' => 'user/' . $user->uid . '/subscriptions'), $options);
     }
@@ -267,7 +270,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
         switch ($element_type) {
           case 'term':
             foreach ($array as $term) {
-              $term_names[] = $sanitize ? check_plain($term->name) : $term->name;
+              $term_names[] = $sanitize?check_plain($term->name) : $term->name;
             }
             $replacements[$original] = implode(', ', $term_names);
             break;
@@ -278,13 +281,13 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
       switch ($name) {
         case 'first':
           $value = $array[$keys[0]];
-          $value = is_array($value) ? render($value) : (string) $value;
-          $replacements[$original] = $sanitize ? check_plain($value) : $value;
+          $value = is_array($value)?render($value) : (string) $value;
+          $replacements[$original] = $sanitize?check_plain($value) : $value;
           break;
         case 'last':
           $value = $array[$keys[count($keys) - 1]];
-          $value = is_array($value) ? render($value) : (string) $value;
-          $replacements[$original] = $sanitize ? check_plain($value) : $value;
+          $value = is_array($value)?render($value) : (string) $value;
+          $replacements[$original] = $sanitize?check_plain($value) : $value;
           break;
         case 'count':
           $replacements[$original] = count($keys);
@@ -369,16 +372,15 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
   }
 
   $field_types = array(
-    'dates' => 'subs_list<date>',             // dates:field_DATE
-    'files' => 'subs_list<file>',             // files:field_FILE
-    'terms' => 'subs_list<term>',             // terms:field_TERM
-    'texts' => 'array',                       // texts:field_TEXT
-    'users' => 'subs_list<user>',             // users:field_USER
+    'dates' => 'subs_list<date>', // dates:field_DATE
+    'files' => 'subs_list<file>', // files:field_FILE
+    'terms' => 'subs_list<term>', // terms:field_TERM
+    'texts' => 'array', // texts:field_TEXT
+    'users' => 'subs_list<user>', // users:field_USER
   );
 
   // Entity field tokens.
-  if (isset($data['object_type']))
-  {
+  if (isset($data['object_type'])) {
     $type = $data['object_type'];
     if (!empty($data[$type]) && $entity_type = token_get_entity_mapping('token', $type)) {
       $entity = NULL;
@@ -404,7 +406,8 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
                 if (isset($tokens2['count'])) {
                   $replacements[$tokens2['count']] = 0;
                 }
-              } else {
+              }
+              else {
                 $objs = array();
                 if ($array_type == 'array') {
                   $field_output = field_view_field($entity_type, $entity, $field_name, 'token', $language_code);
@@ -417,7 +420,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
                     }
                     $objs[$key] = $obj;
                   }
-                  $replacements += token_generate($array_type, $tokens2, array($array_type => $objs), array('sanitize' => FALSE ) + $options);
+                  $replacements += token_generate($array_type, $tokens2, array($array_type => $objs), array('sanitize' => FALSE) + $options);
                 }
                 else {
                   if ($field_items = field_get_items($type, $entity, $field_name, $language_code)) {
@@ -465,7 +468,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
  * @param array $data
  */
 function subscriptions_token_info_alter(array &$data) {
-  $massage_tokens = &drupal_static('subscriptions_mail_massage_tokens');
+  $massage_tokens = &backdrop_static('subscriptions_mail_massage_tokens');
 
   if (empty($massage_tokens)) {
     // Do nothing if we're not on a Mail Editor page.
@@ -558,7 +561,7 @@ function subscriptions_tokens_alter(array &$replacements, array $context) {
         case 'alt':
           if (isset($file->{$name})) {
             $value = $file->{$name};
-            $replacements[$original] = $sanitize ? check_plain($value) : $value;
+            $replacements[$original] = $sanitize?check_plain($value) : $value;
           }
           break;
       }

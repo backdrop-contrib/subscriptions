@@ -35,7 +35,11 @@ function subscriptions_taxonomy_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $
       if ($arg0['module'] == 'node') {
         $node = $arg0['node'];
         $params['node']['tid'] = array(
-          'join' => array('table' => 'taxonomy_index', 'alias' => 'tn', 'on' => (db_driver() != 'pgsql' ? 's.value = tn.tid' : 's.value = CAST(tn.tid AS VARCHAR)')),
+          'join' => array(
+            'table' => 'taxonomy_index',
+            'alias' => 'tn',
+            'on' => (db_driver() != 'pgsql' ? 's.value = tn.tid' : 's.value = CAST(tn.tid AS VARCHAR)'),
+          ),
           'where' => array(array('tn.nid', $node->nid, '=')),
           'groupby' => 'tn.nid',
         );
@@ -67,13 +71,13 @@ function subscriptions_taxonomy_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $
       return $stypes;
 
     case 'stype':
-      return (isset($stypes[$arg0]) ? array_merge( $stypes[$arg0], array($arg1, $arg2)) : NULL);
+      return (isset($stypes[$arg0])?array_merge( $stypes[$arg0], array($arg1, $arg2)) : NULL);
   }
   return NULL;
 }
 
 /**
- * Implements _hook_node_options(), subhook of hook_subscriptions().
+ * Implements hook_node_options(), subhook of hook_subscriptions().
  *
  * This is called by subscriptions_ui_node_form() in subscriptions_ui.module.
  *
@@ -96,7 +100,7 @@ function _subscriptions_taxonomy_node_options($account, $node) {
   $options = array();
   $taxonomy_fields = field_read_fields(array('type' => 'taxonomy_term_reference'));
   /** @var $vids_to_omit array */
-  $vids_to_omit = variable_get('subscriptions_omitted_taxa', array());
+  $vids_to_omit = config_get('subscriptions.settings', 'subscriptions_omitted_taxa');
   foreach ($taxonomy_fields as $field_key => $field) {
     if (isset($node->$field_key)) {
       if ($items = field_get_items('node', $node, $field_key)) {
@@ -109,6 +113,7 @@ function _subscriptions_taxonomy_node_options($account, $node) {
           }
           elseif (!empty($item['tid'])) {
             $term = taxonomy_term_load($item['tid']);
+            // TODO This variable was removed in Backdrop without replacement.
             if ($term->vid != variable_get('forum_nav_vocabulary', 0)) {
               // The field is hidden for this content type.
               if ($user->uid == 1) {
@@ -123,14 +128,23 @@ function _subscriptions_taxonomy_node_options($account, $node) {
             if (!in_array($term->vid, $vids_to_omit)) {
               $tid = $term->tid;
               $options['tid'][] = array(
-                'name'   => t('To content in %term', array('%term' => $term->name)) . $unavailable,
-                'params' => array('module' => 'node', 'field' => 'tid', 'value' => $tid),
-                'link'   => 'taxa/' . $tid,
+                'name' => t('To content in %term', array('%term' => $term->name)) . $unavailable,
+                'params' => array(
+                  'module' => 'node',
+                  'field' => 'tid',
+                  'value' => $tid,
+                ),
+                'link' => 'taxa/' . $tid,
               ) + $hidden;
               $options['tid'][] = array(
-                'name'   => t('To content in %term by %name', array('%term' => $term->name, '%name' => format_username(user_load($node->uid)))) . $unavailable,
-                'params' => array('module' => 'node', 'field' => 'tid', 'value' => $tid, 'author_uid' => $node->uid),
-                'link'   => 'taxa/' . $tid . '/' . $node->uid,
+                'name' => t('To content in %term by %name', array('%term' => $term->name, '%name' => user_format_name(user_load($node->uid)))) . $unavailable,
+                'params' => array(
+                  'module' => 'node',
+                  'field' => 'tid',
+                  'value' => $tid,
+                  'author_uid' => $node->uid,
+                ),
+                'link' => 'taxa/' . $tid . '/' . $node->uid,
               ) + $hidden;
               if ($field_key == 'taxonomy_forums') {
                 // Move forum items to the top.
@@ -148,7 +162,7 @@ function _subscriptions_taxonomy_node_options($account, $node) {
 }
 
 /**
- * Implements _hook_types(), subhook of hook_subscriptions().
+ * Implements hook_types(), subhook of hook_subscriptions().
  *
  * This is called by subscriptions_types() in subscriptions.module.
  *
@@ -162,14 +176,14 @@ function _subscriptions_taxonomy_node_options($account, $node) {
  */
 function _subscriptions_taxonomy_types() {
   $types['taxa'] = array(
-    'title'      => 'Categories',
-    'page'       => 'subscriptions_taxonomy_page_taxa',
-    'fields'     => array('node', 'tid'),
-    'weight'     => -20,
-    'access'     => 'subscribe to taxonomy terms',
+    'title' => 'Categories',
+    'page' => 'subscriptions_taxonomy_page_taxa',
+    'fields' => array('node', 'tid'),
+    'weight' => -20,
+    'access' => 'subscribe to taxonomy terms',
     'permission' => array(
-      'title'       => t('Subscribe to taxonomy terms'),
-      'description' => t('Subscribe to the available taxonomy terms.')
+      'title' => t('Subscribe to taxonomy terms'),
+      'description' => t('Subscribe to the available taxonomy terms.'),
     ),
   );
   return $types;
@@ -204,10 +218,10 @@ function subscriptions_taxonomy_form_subscriptions_settings_form_alter(array &$f
  */
 function subscriptions_taxonomy_page_taxa(array $form, $uid) {
   // traverse the taxonomy tree
-  $vocabularies = function_exists('taxonomy_help') ? taxonomy_get_vocabularies() : array();
+  $vocabularies = function_exists('taxonomy_help')?taxonomy_get_vocabularies() : array();
 
   // omit undesired vocabularies from listing
-  $omits = variable_get('subscriptions_omitted_taxa', array());
+  $omits = config_get('subscriptions.settings', 'subscriptions_omitted_taxa');
   foreach ($omits as $omit) {
     unset($vocabularies[$omit]);
   }
@@ -259,4 +273,12 @@ function subscriptions_taxonomy_taxonomy_term_delete($term) {
       ->condition('value', $term->tid)
       ->execute();
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function subscriptions_taxonomy_autoload_info() {
+  return array(
+  );
 }

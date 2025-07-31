@@ -18,6 +18,7 @@
  * @ingroup form
  */
 function _subscriptions_taxonomy_form_subscriptions_settings_form_alter(array &$form, array &$form_state) {
+  $config = config('subscriptions.settings');
   $tr = 't';
 
   $form['taxonomy'] = array(
@@ -34,31 +35,31 @@ function _subscriptions_taxonomy_form_subscriptions_settings_form_alter(array &$
   }
 
   $form['taxonomy']['subscriptions_restricted_taxa'] = array(
-    '#type'          => 'select',
-    '#title'         => t('Restricted vocabularies'),
-    '#default_value' => variable_get('subscriptions_restricted_taxa', array()),
-    '#options'       => $select,
-    '#description'   => t('Select vocabularies for which only the subscribed terms should be listed on the %Subscriptions | %Categories page.<br />This helps to reduce the size of the listing, especially for free-tagging vocabularies with large numbers of terms.', array('%Subscriptions' => t('Subscriptions'), '%Categories' => $tr('Categories'))),
-    '#multiple'      => TRUE,
+    '#type' => 'select',
+    '#title' => t('Restricted vocabularies'),
+    '#default_value' => $config->get('subscriptions_restricted_taxa'),
+    '#options' => $select,
+    '#description' => t('Select vocabularies for which only the subscribed terms should be listed on the %Subscriptions | %Categories page.<br />This helps to reduce the size of the listing, especially for free-tagging vocabularies with large numbers of terms.', array('%Subscriptions' => t('Subscriptions'), '%Categories' => $tr('Categories'))),
+    '#multiple' => TRUE,
   );
   $form['taxonomy']['subscriptions_omitted_taxa'] = array(
-    '#type'          => 'select',
-    '#title'         => t('Omitted vocabularies'),
-    '#default_value' => variable_get('subscriptions_omitted_taxa', array()),
-    '#options'       => $select,
-    '#description'   => t('Select vocabularies which should be <strong>omitted</strong> from subscriptions listings; this means the terms of those vocabularies will be unlisted, i.e. they will be removed from subscription listings.<br />The content may still be available for subscribing via different kinds of subscriptions, but subscribing by category will be unavailable for the terms in the selected vocabularies.'),
-    '#multiple'      => TRUE,
+    '#type' => 'select',
+    '#title' => t('Omitted vocabularies'),
+    '#default_value' => $config->get('subscriptions_omitted_taxa'),
+    '#options' => $select,
+    '#description' => t('Select vocabularies which should be <strong>omitted</strong> from subscriptions listings; this means the terms of those vocabularies will be unlisted, i.e. they will be removed from subscription listings.<br />The content may still be available for subscribing via different kinds of subscriptions, but subscribing by category will be unavailable for the terms in the selected vocabularies.'),
+    '#multiple' => TRUE,
   );
 
   // @ TODO write the code that supports this setting
   /*
-  $form['taxonomy']['subscriptions_allow_vid'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow vocabularies subscription'),
-    '#default_value' => variable_get('subscriptions_allow_vid', 1),
-    '#description' => t('Allow users to subscribe to an entire vocabluary of terms.'),
-  );
-  */
+   $form['taxonomy']['subscriptions_allow_vid'] = array(
+   '#type' => 'checkbox',
+   '#title' => t('Allow vocabularies subscription'),
+   '#default_value' => variable_get('subscriptions_allow_vid', 1),
+   '#description' => t('Allow users to subscribe to an entire vocabluary of terms.'),
+   );
+   */
 
 }
 
@@ -104,11 +105,11 @@ function _subscriptions_taxonomy_taxa_form(array $form, $uid, array $vocabularie
     );
     $subscriptions_vid = (isset($subscriptions[$vocab->vid]) ? $subscriptions[$vocab->vid] : NULL);
     /** @var $vids_to_restrict array */
-    $vids_to_restrict = variable_get('subscriptions_restricted_taxa', array());
+    $vids_to_restrict = config_get('subscriptions.settings', 'subscriptions_restricted_taxa');
     $tree = NULL;
     if (!in_array($vocab->vid, $vids_to_restrict)) {
       // @ TODO create mechanism to allow users to
-      //        subscribe to all terms under this vocabulary
+//        subscribe to all terms under this vocabulary
       $tree = taxonomy_get_tree($vocab->vid);
     }
     else {
@@ -121,7 +122,9 @@ function _subscriptions_taxonomy_taxa_form(array $form, $uid, array $vocabularie
       }
     }
     $forum_containers = NULL;
+    // TODO This variable was removed in Backdrop without replacement.
     if (module_exists('forum') && $vocab->vid == variable_get('forum_nav_vocabulary', '')) {
+      // TODO This variable was removed in Backdrop without replacement.
       $forum_containers = variable_get('forum_containers', array());
     }
     $defaults = array();
@@ -131,7 +134,7 @@ function _subscriptions_taxonomy_taxa_form(array $form, $uid, array $vocabularie
           $term = (object) $term;
         }
         $depth = (empty($term->depth) ? 0 : $term->depth);
-        $term_name = function_exists('i18n_string') ? i18n_string('taxonomy:term:' . $term->tid . ':name', $term->name, array('langcode' => $GLOBALS['language']->language)) : $term->name;
+        $term_name = function_exists('i18n_string')?i18n_string('taxonomy:term:' . $term->tid . ':name', $term->name, array('langcode' => $GLOBALS['language']->language)) : $term->name;
         $title = '<span class="indenter">' . str_repeat('--&nbsp;', $depth) . '</span>' .
           l($term_name, 'taxonomy/term/' . $term->tid, array('attributes' => array('class' => 'depth-' . $depth)));
         if (!isset($subscriptions_vid[$term->tid][-1])) {

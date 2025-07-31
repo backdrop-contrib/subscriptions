@@ -5,4 +5,5 @@ package = "Subscriptions"
 dependencies[] = subscriptions_content
 dependencies[] = blog
 
-core = 7.x
+backdrop = 1.x
+type = module

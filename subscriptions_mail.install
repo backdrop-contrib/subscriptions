@@ -21,7 +21,7 @@ function subscriptions_mail_install() {
 function _subscriptions_mail_extend_mail_edit() {
   if (!function_exists('subscriptions_mail_schema_alter')) {
     $t = get_t();
-    throw new DrupalUpdateException($t('@Subscriptions_Mail must be enabled before it can be updated', array(
+    throw new BackdropUpdateException($t('@Subscriptions_Mail must be enabled before it can be updated', array(
       '@Subscriptions_Mail' => 'Subscriptions Mail',
     )) . ' - ');
   }
@@ -44,15 +44,19 @@ function subscriptions_mail_uninstall() {
     db_drop_field('mail_edit', $name);
   }
 
-  variable_del('subscriptions_mail_trash_silently');
-  variable_del('subscriptions_number_of_mails');
-  variable_del('subscriptions_site_mail_name');
-  variable_del('subscriptions_site_mail');
-  variable_del('subscriptions_watchall');
-  variable_del('subscriptions_watchgood');
-  variable_del('subscriptions_watchstats');
+  config_clear('subscriptions.settings', 'subscriptions_mail_trash_silently');
+  config_clear('subscriptions.settings', 'subscriptions_number_of_mails');
+  config_clear('subscriptions.settings', 'subscriptions_site_mail_name');
+  config_clear('subscriptions.settings', 'subscriptions_site_mail');
+  config_clear('subscriptions.settings', 'subscriptions_watchall');
+  config_clear('subscriptions.settings', 'subscriptions_watchgood');
+  config_clear('subscriptions.settings', 'subscriptions_watchstats');
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function subscriptions_mail_requirements($phase) {
   $requirements = array();
   if ($phase == 'update') {
@@ -77,13 +81,6 @@ function subscriptions_mail_requirements($phase) {
   return $requirements;
 }
 
-/**
- * Database update function 7000: Extend the {mail_edit} table.
- */
-function subscriptions_mail_update_7000() {
-  if (db_table_exists('mail_edit') && !db_field_exists('mail_edit', 'subscriptions_comment_body')) {
-    // Add column to {mail_edit} table.
-    _subscriptions_mail_extend_mail_edit();
-  }
-}
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function subscriptions_mail_update_7000() { }
 

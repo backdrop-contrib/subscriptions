@@ -6,16 +6,17 @@
  */
 
 /**
- * Implementation of hook_cron().
+ * Implements hook_cron().
  *
  * Takes items from {subscriptions_queue} and generates notification emails.
  */
 function _subscriptions_mail_cron() {
+  $config = config('subscriptions.settings');
 
   global $user, $language;
   _subscriptions_mail_module_load_include('templates.inc');
 
-  $mails_allowed = variable_get('subscriptions_number_of_mails', 0);
+  $mails_allowed = $config->get('subscriptions_number_of_mails');
   $from = _subscriptions_mail_site_mail();
   $single_count = $single_failed = $digest_count = $digest_failed = 0;
   $loaded_objects = array();
@@ -25,10 +26,10 @@ function _subscriptions_mail_cron() {
   // Use a defined percentage of the total cron time (default: 50%), but leave at least 5s.
   $total_seconds = ini_get('max_execution_time');
   $total_seconds = (empty($total_seconds) ? 240 : $total_seconds);
-  $lost_seconds = timer_read('page')/1000;
+  $lost_seconds = timer_read('page') / 1000;
   $available_seconds = $total_seconds - $lost_seconds;
-  $usable_seconds = min(array($available_seconds - 5, $total_seconds*subscriptions_mail_get_cron_percentage()/100));
-  $watchdog = 'watchdog';  // disable automatic translation
+  $usable_seconds = min(array($available_seconds - 5, $total_seconds * subscriptions_mail_get_cron_percentage() / 100));
+  $watchdog = 'watchdog'; // disable automatic translation
   $watchdog_variables = array('@Subscriptions' => 'Subscriptions');
   //TEST: watchdog('cron', "Subscriptions has $available_seconds of $total_seconds seconds available.");
   if ($usable_seconds <= 0) {
@@ -42,10 +43,10 @@ function _subscriptions_mail_cron() {
   }
 
   while ((empty($mails_allowed) || $single_count + $digest_count < $mails_allowed)
-          && timer_read('page')/1000 < $lost_seconds + $usable_seconds) {
+           && timer_read('page') / 1000 < $lost_seconds + $usable_seconds) {
     $result = db_query_range("SELECT * FROM {subscriptions_queue} WHERE suspended = 0 AND last_sent + send_interval < :time ORDER BY sqid", 0, 1, array(':time' => time()));
     if (!($queue_item = $result->fetchAssoc())) {
-      break;  // No more ready queue items, terminate loop.
+      break; // No more ready queue items, terminate loop.
     }
 
     if (!$subscriber = user_load($queue_item['uid'])) {
@@ -55,7 +56,7 @@ function _subscriptions_mail_cron() {
 
     $saved_user     = $user;
     $saved_language = $language;
-    drupal_save_session(FALSE);
+    backdrop_save_session(FALSE);
     // Clear the term cache to avoid getting a different user's set of terms.
     entity_load('taxonomy_term', array(), array(), TRUE);
     $lang_code = $language->language;
@@ -64,14 +65,14 @@ function _subscriptions_mail_cron() {
     $digest_data                      = array('subs' => array('type' => 'digest'));
     $watchdog_variables['%user_name'] = $user->name;
 
-    do {  // once and repeat while adding to a digest
-      $watchall = variable_get('subscriptions_watchall', 0);
+    do { // once and repeat while adding to a digest
+      $watchall = $config->get('subscriptions_watchall');
       if (!$user->status) {
         if ($watchall) {
           $watchdog('subscriptions', t('Subscription of blocked user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }
       }
-      elseif (!$user->access && !variable_get('subscriptions_mail_unaccessed_users', FALSE)) {
+      elseif (!$user->access && !$config->get('subscriptions_mail_unaccessed_users')) {
         if ($watchall) {
           $watchdog('subscriptions', t('Subscription of never-logged-in user %user_name ignored.', $watchdog_variables), NULL, WATCHDOG_DEBUG);
         }
@@ -85,7 +86,7 @@ function _subscriptions_mail_cron() {
           $object = $queue_item['object'];
           $access = module_invoke_all('subscriptions', 'access', $load_function, $load_args, $object);
           // Allow other modules to alter the data.
-          drupal_alter('subscriptions_access', $access);
+          backdrop_alter('subscriptions_access', $access);
 
           // One FALSE vote is enough to deny. Also, we need a non-empty array.
           $allow = !empty($access) && array_search(FALSE, $access) === FALSE;
@@ -119,13 +120,13 @@ function _subscriptions_mail_cron() {
 
           $data = array(
             'subs' => array(
-              'type'             => $fields[$lang_code][$module][$field]['subs_type'],
-              'unsubscribe_path' => "s/del/$module/$ori_field/$ori_value/" . $queue_item['author_uid'] . '/' . $queue_item['uid'] . '/' . md5(drupal_get_private_key() . $module . $ori_field . $ori_value . $queue_item['author_uid'] . $queue_item['uid']),
+              'type' => $fields[$lang_code][$module][$field]['subs_type'],
+              'unsubscribe_path' => "s/del/$module/$ori_field/$ori_value/" . $queue_item['author_uid'] . '/' . $queue_item['uid'] . '/' . md5(backdrop_get_private_key() . $module . $ori_field . $ori_value . $queue_item['author_uid'] . $queue_item['uid']),
             ),
             'user' => user_load(!empty($object->revision_uid) ? $object->revision_uid : $object->uid),
           );
           $data_function($data, $object, $queue_item);
-          drupal_alter('subscriptions_data', $data, $object, $queue_item);
+          backdrop_alter('subscriptions_data', $data, $object, $queue_item);
           //mail_edit_format($values['subscriptions_comment_body'], $data + array('comment' => $comment), array('language' => $language));
 
           if ($digest) {
@@ -161,7 +162,7 @@ function _subscriptions_mail_cron() {
 
     $user     = $saved_user;
     $language = $saved_language;
-    drupal_save_session(TRUE);
+    backdrop_save_session(TRUE);
   }
 
   if (module_exists('taxonomy')) {
@@ -170,21 +171,21 @@ function _subscriptions_mail_cron() {
   }
 
   if ($single_count + $digest_count + $single_failed + $digest_failed > 0) {
-    $current_seconds = timer_read('page')/1000;
+    $current_seconds = timer_read('page') / 1000;
     $variables = $watchdog_variables + array(
-      '!single_count'      => $single_count,
-      '!digest_count'      => $digest_count,
-      '!single_failed'     => $single_failed,
-      '!digest_failed'     => $digest_failed,
-      '!used_seconds'      => round($current_seconds - $lost_seconds),
-      '!total_seconds'     => $total_seconds,
-      '!remaining_items'   => db_query("SELECT COUNT(*) FROM {subscriptions_queue} WHERE last_sent + send_interval < :send_interval AND suspended = 0", array(':send_interval' => REQUEST_TIME))->fetchField(),
-      '!suspended_items'   => db_query("SELECT COUNT(*) FROM {subscriptions_queue} WHERE last_sent + send_interval < :send_interval AND suspended <> 0", array(':send_interval' => REQUEST_TIME))->fetchField(),
+      '!single_count' => $single_count,
+      '!digest_count' => $digest_count,
+      '!single_failed' => $single_failed,
+      '!digest_failed' => $digest_failed,
+      '!used_seconds' => round($current_seconds - $lost_seconds),
+      '!total_seconds' => $total_seconds,
+      '!remaining_items' => db_query("SELECT COUNT(*) FROM {subscriptions_queue} WHERE last_sent + send_interval < :send_interval AND suspended = 0", array(':send_interval' => REQUEST_TIME))->fetchField(),
+      '!suspended_items' => db_query("SELECT COUNT(*) FROM {subscriptions_queue} WHERE last_sent + send_interval < :send_interval AND suspended <> 0", array(':send_interval' => REQUEST_TIME))->fetchField(),
       '!remaining_seconds' => round($total_seconds - $current_seconds),
-      '%varname'           => 'subscriptions_mail_trash_silently',
-      '!cron'              => 'cron',
+      '%varname' => 'subscriptions_mail_trash_silently',
+      '!cron' => 'cron',
     );
-    if (variable_get('subscriptions_mail_trash_silently', 0)) {
+    if ($config->get('subscriptions_mail_trash_silently')) {
       $message = t('@Subscriptions DISCARDED !single_count single and !digest_count digest notifications in !used_seconds of !total_seconds seconds, due to the %varname variable being set.', $variables);
     }
     elseif ($single_failed > 0 || $digest_failed > 0) {
@@ -222,34 +223,34 @@ function subscriptions_mail_digest_add_item($digest_data, $mailmod, $mailkey, $d
     ),
   );
 
-  // This code is adapted from drupal_mail() and simulates mailing the item.
+  // This code is adapted from backdrop_mail() and simulates mailing the item.
   // We probably need to provide all the data in order to not surprise any
   // third-party module that implements hook_mail() or hook_mail_alter().
   $message = array(
-    'id'       => $mailmod . '_' . $mailkey,
-    'module'   => $mailmod,
-    'key'      => $mailkey,
-    'to'       => '',
-    'from'     => '', //isset($from) ? $from : $default_from,
+    'id' => $mailmod . '_' . $mailkey,
+    'module' => $mailmod,
+    'key' => $mailkey,
+    'to' => '',
+    'from' => '', //isset($from) ? $from : $default_from,
     'language' => user_preferred_language($user),
-    'params'   => $params,
-    'subject'  => '',
-    'body'     => array()
+    'params' => $params,
+    'subject' => '',
+    'body' => array(),
   );
   $headers = array(
-    'MIME-Version'              => '1.0',
-    'Content-Type'              => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
+    'MIME-Version' => '1.0',
+    'Content-Type' => 'text/plain; charset=UTF-8; format=flowed; delsp=yes',
     'Content-Transfer-Encoding' => '8Bit',
-    'X-Mailer'                  => 'Drupal'
+    'X-Mailer' => 'Backdrop',
   );
-  $headers['From'] = $headers['Sender'] = $headers['Return-Path'] = variable_get('site_mail', ini_get('sendmail_from'));
+  $headers['From'] = $headers['Sender'] = $headers['Return-Path'] = config_get('system.performance', 'site_mail');
   $message['headers'] = $headers;
   if (function_exists($function = $mailmod . '_mail')) {
     $function($mailkey, $message, $params);
   }
 
   // Invoke hook_mail_alter() to allow all modules to alter the resulting e-mail.
-  drupal_alter('mail', $message);
+  backdrop_alter('mail', $message);
 
   // Save the formatted body and return the modified $data.
   $data['subs']['formatted_item'] = $message['body'][0];
@@ -275,7 +276,7 @@ function subscriptions_mail_mail($key, &$message, $params) {
   global $base_url;
 
   $url = parse_url($base_url);
-  $list_id = variable_get('site_name', '') . ' ' . t('Subscriptions') . ' <subscriptions.' . $url['host'] . '>';
+  $list_id = config_get('system.performance', 'site_name') . ' ' . t('Subscriptions') . ' <subscriptions.' . $url['host'] . '>';
   $message['headers']['List-Id'] = $list_id;
   //dpm($message, "subscriptions_mail_mail($key)");
 }
@@ -296,14 +297,15 @@ function subscriptions_mail_mail($key, &$message, $params) {
  * @return bool|null
  */
 function _subscriptions_mail_send($module, $mailkey, $name, $to, $from, $uid, $send_intervals, $data) {
+  $config = config('subscriptions.settings');
   global $user;
 
-  if (variable_get('subscriptions_mail_trash_silently', 0)) {
+  if ($config->get('subscriptions_mail_trash_silently')) {
     // Block notification mail; useful for staging and development servers.
     return NULL;
   }
 
-  $mail_success = drupal_mail($module, $mailkey, $to, user_preferred_language($user), array(
+  $mail_success = backdrop_mail($module, $mailkey, $to, user_preferred_language($user), array(
     'data' => $data,
     'account' => $user,
     'object' => NULL,
@@ -312,29 +314,29 @@ function _subscriptions_mail_send($module, $mailkey, $name, $to, $from, $uid, $s
   $to = check_plain($to);
   $watchdog = 'watchdog';
   $watchdog_params = array(
-    '%name'        => $name,
-    '!address'     => "<a href='mailto:$to'>$to</a>",
-    '!result'      => 'result',
-    '%result'      => $mail_success['result'],
-    '!drupal_mail' => l('drupal_mail', 'http://api.drupal.org/api/search/7/drupal_mail'),
+    '%name' => $name,
+    '!address' => "<a href='mailto:$to'>$to</a>",
+    '!result' => 'result',
+    '%result' => $mail_success['result'],
+    '!backdrop_mail' => l('backdrop_mail', 'http://api.drupal.org/api/search/7/backdrop_mail'),
   );
-  if (variable_get('subscriptions_watchall', 0)) {
-    $watchdog('subscriptions', t('Notification for %name (!address) passed on to !drupal_mail(), !result=[%result].', $watchdog_params), NULL, WATCHDOG_DEBUG);
+  if ($config->get('subscriptions_watchall')) {
+    $watchdog('subscriptions', t('Notification for %name (!address) passed on to !backdrop_mail(), !result=[%result].', $watchdog_params), NULL, WATCHDOG_DEBUG);
   }
 
   if (!empty($mail_success['result'])) {
-    if (variable_get('subscriptions_watchgood', 1)) {
+    if ($config->get('subscriptions_watchgood')) {
       $watchdog('subscriptions', t('Notification sent to...'), NULL);
     }
     foreach ($send_intervals as $send_interval) {
       db_merge('subscriptions_last_sent')
         ->key(array(
-          'uid'           => $uid,
-          'send_interval' => $send_interval,
-        ))
+        'uid' => $uid,
+        'send_interval' => $send_interval,
+      ))
         ->fields(array(
-          'last_sent'     => REQUEST_TIME,
-        ))
+        'last_sent' => REQUEST_TIME,
+      ))
         ->execute();
     }
     return TRUE;
@@ -383,16 +385,16 @@ function _subscriptions_mail_mail_alter(array &$message) {
   $message['body'][0] = _subscriptions_mail_add_mailkey($message['body'][0], $message['id'], $message['language']->language);
 
   /* Comment this line for debugging...
-  dpm($message, 'drupal_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');
-  $message['to'] = '';
-  /**/
+   dpm($message, 'backdrop_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');
+   $message['to'] = '';
+   /**/
 }
 
 /**
  * Helper function to add the mailkey if enabled.
  */
 function _subscriptions_mail_add_mailkey($body, $mailkey, $language = NULL) {
-  if (variable_get('subscriptions_showmailkeys', 0)) {
+  if (config_get('subscriptions.settings', 'subscriptions_showmailkeys')) {
     $prefix = substr($body, 0, 2);
     $prefix = ( $prefix[1] == ' ' ? $prefix : '' );
     $body .= $prefix . $mailkey . (empty($language) ? '' : '/' . $language) . "\n";

@@ -23,6 +23,10 @@
 define('SUBSCRIPTIONS_CONFIG_PATH', 'admin/config/system/subscriptions');
 define('SUBSCRIPTIONS_CONFIG_PATH_LEVEL', count(explode('/', SUBSCRIPTIONS_CONFIG_PATH)));
 
+if (!defined('BACKDROP_AUTHENTICATED_RID')) {
+  define('BACKDROP_AUTHENTICATED_RID', 2);
+}
+
 /**
  * Implements hook_init().
  *
@@ -40,6 +44,17 @@ function subscriptions_init() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function subscriptions_config_info() {
+  $prefixes['subscriptions.settings'] = array(
+    'label' => t('Subscriptions settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_menu().
  *
  * @return array
@@ -51,7 +66,7 @@ function subscriptions_menu() {
   $items[SUBSCRIPTIONS_CONFIG_PATH] = array(
     'title' => 'Subscriptions',
     'description' => 'Site and user default settings for Subscriptions.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'file' => 'subscriptions.admin.inc',
     'page arguments' => array('subscriptions_settings_form'),
     'access arguments' => array('administer site configuration'),
@@ -65,7 +80,7 @@ function subscriptions_menu() {
     'title' => 'User defaults',
     'weight' => -5,
     'file' => 'subscriptions.admin.inc',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('subscriptions_page_user_overview', SUBSCRIPTIONS_CONFIG_PATH_LEVEL + 2),
     'type' => MENU_LOCAL_TASK,
     'access arguments' => array('administer site configuration'),
@@ -78,7 +93,7 @@ function subscriptions_menu() {
   $items[SUBSCRIPTIONS_CONFIG_PATH . '/userdefaults/bulk'] = array(
     'title' => 'Bulk operation',
     'weight' => -80,
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'file' => 'subscriptions.admin.inc',
     'page arguments' => array('subscriptions_page_user_bulk'),
     'type' => MENU_LOCAL_TASK,
@@ -86,7 +101,7 @@ function subscriptions_menu() {
   );
   $items[SUBSCRIPTIONS_CONFIG_PATH . '/intervals'] = array(
     'title' => 'Interval',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'file' => 'subscriptions.admin.inc',
     'page arguments' => array('subscriptions_intervals'),
     'type' => MENU_LOCAL_TASK,
@@ -95,14 +110,14 @@ function subscriptions_menu() {
   $items['user/%user/subscriptions'] = array(
     'title' => 'Subscriptions',
     'file' => 'subscriptions.admin.inc',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('subscriptions_page_user_overview', 1),
     'type' => MENU_LOCAL_TASK,
     'access callback' => '_subscriptions_access',
     'access arguments' => array(1),
   );
 
-  $hide_overview_page = variable_get('subscriptions_hide_overview_page', 0);
+  $hide_overview_page = config_get('subscriptions.settings', 'subscriptions_hide_overview_page');
   $minimum_weight = 0;
   if (!$hide_overview_page) {
     $items['user/%user/subscriptions/overview'] = array(
@@ -125,26 +140,26 @@ function subscriptions_menu() {
       'title' => 'Add subscription',
       'type' => MENU_CALLBACK,
       'file' => 'subscriptions.admin.inc',
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'backdrop_get_form',
       'page arguments' => array('subscriptions_add_form', $stype),
       'access arguments' => array($data['access']),
     );
     $items['subscriptions/del/' . $stype] = array(
       'type' => MENU_CALLBACK,
       'file' => 'subscriptions.admin.inc',
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'backdrop_get_form',
       'page arguments' => array('subscriptions_del_form', $stype),
       'access arguments' => array($data['access']),
     );
 
     if (empty($data['page'])) {
-      continue;  // no page
+      continue; // no page
     }
     $items['user/%user/subscriptions/' . $stype] = array(
-      'title' => 'N/A',  // for l.d.o, overwritten below
+      'title' => 'N/A', // for l.d.o, overwritten below
       'type' => MENU_LOCAL_TASK,
       'file' => 'subscriptions.admin.inc',
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'backdrop_get_form',
       'page arguments' => array('subscriptions_page_form', 1, $stype),
       'access callback' => '_subscriptions_access',
       'access arguments' => array(1, $data['access']),
@@ -167,13 +182,13 @@ function subscriptions_menu() {
     }
 
     if ($stype == 'node') {
-      continue;  // not in site settings
+      continue; // not in site settings
     }
     $items[SUBSCRIPTIONS_CONFIG_PATH . '/userdefaults/' . $stype] = array(
-      'title' => 'N/A',  // for l.d.o, overwritten below
+      'title' => 'N/A', // for l.d.o, overwritten below
       'type' => MENU_LOCAL_TASK,
       'file' => 'subscriptions.admin.inc',
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'backdrop_get_form',
       'page arguments' => array('subscriptions_page_form', SUBSCRIPTIONS_CONFIG_PATH_LEVEL + 2, $stype),
       'access callback' => '_subscriptions_bulk_or_site_access',
       'weight' => $weight,
@@ -183,7 +198,7 @@ function subscriptions_menu() {
 
   // Unsubscribe links
   $items['subscriptions/rem/%'] = array(
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('subscriptions_delete_form', 2, 3, 4, 5, 6),
     'type' => MENU_CALLBACK,
     'access callback' => '_subscriptions_rem_access',
@@ -219,7 +234,7 @@ function subscriptions_admin_paths() {
  */
 function _subscriptions_rem_access($a2, $a3, $a4, $a5, $a6, $md) {
 
-  return $md == md5(drupal_get_private_key() . $a2 . $a3 . $a4 . $a5 . $a6);
+  return $md == md5(backdrop_get_private_key() . $a2 . $a3 . $a4 . $a5 . $a6);
 }
 
 /**
@@ -251,6 +266,10 @@ function _subscriptions_access($account, $access = NULL) {
  *
  * @returns: bool
  */
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function _subscriptions_bulk_access() {
   return user_access('bulk-administer user subscriptions') && !empty($_SESSION['subscriptions']['bulk_op']);
 }
@@ -259,6 +278,10 @@ function _subscriptions_bulk_access() {
  * Access callback for bulk operations or site configuration.
  *
  * @returns: bool
+ */
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
  */
 function _subscriptions_bulk_or_site_access() {
   return _subscriptions_bulk_access() || user_access('administer site configuration');
@@ -275,31 +298,31 @@ function _subscriptions_bulk_or_site_access() {
 function subscriptions_permission() {
   // Enforce a reasonable ordering of the permissions.
   $placeholders = array(
-    'subscribe to content'           => array(),
-    'subscribe to content types'     => array(),
+    'subscribe to content' => array(),
+    'subscribe to content types' => array(),
     'subscribe to all content types' => array(),
   );
   $return = array_merge(
     array(
-      'administer user subscriptions' => array(
-        'title'           => t('Administer user subscriptions'),
-        'description'     => t('Administer the subscriptions of all other users.'),
-        'restrict access' => TRUE,
-      ),
-      'bulk-administer user subscriptions' => array(
-        'title'           => t('Administer user subscriptions using bulk user operations'),
-        'description'     => t('Add subscriptions to or remove subscriptions from multiple users at once from the user list.'),
-        'restrict access' => TRUE,
-      ),
+    'administer user subscriptions' => array(
+      'title' => t('Administer user subscriptions'),
+      'description' => t('Administer the subscriptions of all other users.'),
+      'restrict access' => TRUE,
     ),
+    'bulk-administer user subscriptions' => array(
+      'title' => t('Administer user subscriptions using bulk user operations'),
+      'description' => t('Add subscriptions to or remove subscriptions from multiple users at once from the user list.'),
+      'restrict access' => TRUE,
+    ),
+  ),
     $placeholders,
     subscriptions_types('permission'),
     array(
-      'suspend own subscriptions' => array(
-        'title'       => t('Suspend own subscriptions'),
-        'description' => t('Temporarily suspend subscriptions &mdash; resuming is always allowed.'),
-      ),
-    )
+    'suspend own subscriptions' => array(
+      'title' => t('Suspend own subscriptions'),
+      'description' => t('Temporarily suspend subscriptions &mdash; resuming is always allowed.'),
+    ),
+  )
   );
   foreach (array_keys($placeholders) as $key) {
     if (empty($return[$key])) {
@@ -320,12 +343,12 @@ function subscriptions_permission() {
  *
  * @ingroup hooks
  */
-function subscriptions_user_insert(array $edit, &$account, $category) {
-  $new_uid = &drupal_static('subscriptions_user_insert', 0);
+function subscriptions_user_insert($account) {
+  $new_uid = &backdrop_static('subscriptions_user_insert', 0);
   db_insert('subscriptions_user')
     ->fields(array(
-      'uid' => $account->uid,
-    ))
+    'uid' => $account->uid,
+  ))
     ->execute();
   // $account->roles isn't set yet, subscriptions_user_load() below will
   // insert the role-specific initial subscriptions.
@@ -344,7 +367,51 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
   db_insert('subscriptions', array('return' => Database::RETURN_NULL))
     ->from($query)
     ->execute();
+  _subscriptions_user_insert_internal($account);
 }
+
+/**
+ * Shared logic for creating a subscriptions_user record.
+ */
+function _subscriptions_user_insert_internal($account) {
+  $new_uid = &backdrop_static('subscriptions_user_insert', 0);
+
+  // Use db_merge to avoid duplicate uid insert
+  db_merge('subscriptions_user')
+    ->key(['uid' => $account->uid])
+    ->fields(['uid' => $account->uid])
+    ->execute();
+
+  $new_uid = $account->uid;
+
+  $rids = array();
+  foreach (array_keys($account->roles) as $rid) {
+    $rids[] = -$rid;
+  }
+
+  $query = db_select('subscriptions', 's')
+    ->fields('s', ['module', 'field', 'value', 'send_interval', 'author_uid', 'send_updates', 'send_comments'])
+    ->condition('s.recipient_uid', $rids, 'IN');
+
+  $result = $query->execute();
+
+  foreach ($result as $row) {
+    db_insert('subscriptions')
+      ->fields([
+        'module' => $row->module,
+        'field' => $row->field,
+        'value' => $row->value,
+        'recipient_uid' => $new_uid,
+        'send_interval' => $row->send_interval,
+        'author_uid' => $row->author_uid,
+        'send_updates' => $row->send_updates,
+        'send_comments' => $row->send_comments,
+      ])
+      ->execute();
+  }
+}
+
+
 
 /**
  * Implements hook_user_update().
@@ -357,7 +424,7 @@ function subscriptions_user_insert(array $edit, &$account, $category) {
  *
  * @ingroup hooks
  */
-function subscriptions_user_update(&$edit, $account, $category) {
+function subscriptions_user_update($account) {
   if ($account->status === '0' && $account->original->status === '1') {
     // User is being blocked.
     _subscriptions_module_load_include('subscriptions', 'admin.inc');
@@ -487,7 +554,7 @@ function subscriptions_write($access_key, $module, $field, $value, $author_uid =
 function subscriptions_queue(array $event) {
   global $user;
 
-  if (isset($event['node']->nid) && strpos('  ' . variable_get('subscriptions_blocked_nodes', '') . ' ', ' ' . $event['node']->nid . ' ')) {
+  if (isset($event['node']->nid) && strpos('  ' . config_get('subscriptions.settings', 'subscriptions_blocked_nodes') . ' ', ' ' . $event['node']->nid . ' ')) {
     return;
   }
 
@@ -500,7 +567,7 @@ function subscriptions_queue(array $event) {
     $function = $module . '_subscriptions_queue_alter';
     $function($event);
     if (empty($event)) {
-      return;  // $event was cleared, forget it
+      return; // $event was cleared, forget it
     }
   }
 
@@ -511,7 +578,7 @@ function subscriptions_queue(array $event) {
   foreach (module_implements('subscriptions') as $subs_module) {
     $subs_module_query = module_invoke($subs_module, 'subscriptions', 'queue', $event);
     // Allow other modules to alter the data.
-    drupal_alter('subscriptions_queue_query', $subs_module_query);
+    backdrop_alter('subscriptions_queue_query', $subs_module_query);
 
     if (!isset($subs_module_query)) {
       continue;
@@ -524,7 +591,7 @@ function subscriptions_queue(array $event) {
         $select->leftJoin('subscriptions_last_sent', 'sls', 'su.uid = sls.uid AND s.send_interval = sls.send_interval');
 
         if (!empty($query['join'])) {
-          $joins = isset($query['join']['table']) ? array($query['join']) : $query['join'];
+          $joins = isset($query['join']['table'])?array($query['join']) : $query['join'];
           foreach ($joins as $join) {
             $select->innerJoin($join['table'], $join['alias'], $join['on']);
           }
@@ -542,7 +609,7 @@ function subscriptions_queue(array $event) {
           ->condition('s.module', $module)
           ->condition('s.field', $field)
           // author-specific subscriptions trigger on comments, when the node author is subscribed to:
-          ->condition('s.author_uid', array(($module == 'node' && $event['type'] == 'comment' && isset($event['node']->uid) ? $event['node']->uid : $event['uid']) , -1), 'IN')
+          ->condition('s.author_uid', array(($module == 'node' && $event['type'] == 'comment' && isset($event['node']->uid) ? $event['node']->uid : $event['uid']), -1), 'IN')
           ->groupBy('u.uid');
 
         // #2798015: "only_full_group_by" becomes standard in MySQL 5.7,
@@ -580,9 +647,9 @@ function subscriptions_queue(array $event) {
         $insert = db_insert('subscriptions_queue', array('return' => Database::RETURN_NULL))
           ->from($select);
         /*  for debugging:
-        $sqid = $insert->execute();
-        drupal_set_message($insert->__toString() . '<br />ID=' . $sqid . ' inserted.');
-        /*/
+         $sqid = $insert->execute();
+         backdrop_set_message($insert->__toString() . '<br />ID=' . $sqid . ' inserted.');
+         /*/
         $insert->execute();
         /**/
       }
@@ -610,7 +677,7 @@ function subscriptions_get_subscription($uid, $module, $field, $value, $author_u
       ':field' => $field,
       ':value' => $value,
       ':author_uid' => $author_uid,
-      ':recipient_uid' => $uid
+      ':recipient_uid' => $uid,
     ))->fetchField();
   }
 
@@ -632,17 +699,17 @@ function subscriptions_get_subscription($uid, $module, $field, $value, $author_u
 function subscriptions_write_subscription($module, $field, $value, $author_uid, $recipient_uid, $send_interval = 1, $send_updates = 0, $send_comments = 0) {
   db_merge('subscriptions')
     ->key(array(
-      'module'        => $module,
-      'field'         => $field,
-      'value'         => $value,
-      'recipient_uid' => $recipient_uid,
-      'author_uid'    => $author_uid,
-    ))
+    'module' => $module,
+    'field' => $field,
+    'value' => $value,
+    'recipient_uid' => $recipient_uid,
+    'author_uid' => $author_uid,
+  ))
     ->fields(array(
-      'send_interval' => $send_interval,
-      'send_updates'  => ($send_updates ? 1 : 0),
-      'send_comments' => ($send_comments ? 1 : 0),
-    ))
+    'send_interval' => $send_interval,
+    'send_updates' => ($send_updates ? 1 : 0),
+    'send_comments' => ($send_comments ? 1 : 0),
+  ))
     ->execute();
 }
 
@@ -672,7 +739,10 @@ function subscriptions_write_subscription($module, $field, $value, $author_uid, 
  * @see _subscriptions_menu()
  */
 function subscriptions_delete_form(array $form, array &$form_state, $module, $field, $value, $author_uid, $recipient_uid) {
-  $form['data'] = array('#type' => 'value', '#value' => array($module, $field, $value, $author_uid, $recipient_uid));
+  $form['data'] = array(
+    '#type' => 'value',
+    '#value' => array($module, $field, $value, $author_uid, $recipient_uid),
+  );
   // We might be called from subscriptions_del_form() and don't want to submit to subscriptions_del_form_submit():
   $form['#submit'][] = 'subscriptions_delete_form_submit';
   return confirm_form(
@@ -693,7 +763,7 @@ function subscriptions_delete_form(array $form, array &$form_state, $module, $fi
 function subscriptions_delete_form_submit(array $form, array &$form_state) {
   $data = $form_state['values']['data'];
   subscriptions_delete($data['4'], $data['0'], $data['1'], $data['2'], $data['3']);
-  drupal_set_message(t('Your subscription was deactivated.'));
+  backdrop_set_message(t('Your subscription was deactivated.'));
   $form_state['redirect'] = '<front>';
 }
 
@@ -750,13 +820,13 @@ function subscriptions_get(array $params) {
  * @ingroup hooks
  */
 function subscriptions_types($field = NULL, $type = NULL) {
-  $types = &drupal_static(__FUNCTION__ . '_types');
-  $list = &drupal_static(__FUNCTION__ . '_list');
+  $types = &backdrop_static(__FUNCTION__ . '_types');
+  $list = &backdrop_static(__FUNCTION__ . '_list');
 
   if (!isset($types)) {
     $types = module_invoke_all('subscriptions', 'types');
     // Allow other modules to alter the data.
-    drupal_alter('subscriptions_types', $types);
+    backdrop_alter('subscriptions_types', $types);
 
     foreach ($types as $stype => $data) {
       if (!_subscriptions_validate_hook_result($stype, $data)) {
@@ -816,7 +886,7 @@ function _subscriptions_validate_hook_result($stype, array $data) {
         }
       }
     }
-    drupal_set_message(t('The following modules return invalid data from %hook: !modules   Either they are buggy !Subscriptions add-ons, or they are unrelated to !Subscriptions and should not define %hook!', array('%hook' => 'hook_subscriptions()', '!modules' => '<ul><li>' . implode($modules, '</li><li>') . '</li></ul>', '!Subscriptions' => 'Subscriptions')), 'error', FALSE);
+    backdrop_set_message(t('The following modules return invalid data from %hook: !modules   Either they are buggy !Subscriptions add-ons, or they are unrelated to !Subscriptions and should not define %hook!', array('%hook' => 'hook_subscriptions()', '!modules' => '<ul><li>' . implode($modules, '</li><li>') . '</li></ul>', '!Subscriptions' => 'Subscriptions')), 'error', FALSE);
   }
   return FALSE;
 }
@@ -831,7 +901,7 @@ function subscriptions_theme() {
     'subscriptions_form_table' => array(
       'file' => 'subscriptions.admin.inc',
       'render element' => 'element',
-    )
+    ),
   );
 }
 
@@ -843,7 +913,7 @@ function subscriptions_theme() {
  * @return bool
  */
 function subscriptions_node_is_blocked($nid) {
-  return strpos('  ' . variable_get('subscriptions_blocked_nodes', '') . ' ', ' ' . $nid . ' ');
+  return strpos('  ' . config_get('subscriptions.settings', 'subscriptions_blocked_nodes') . ' ', ' ' . $nid . ' ');
 }
 
 /**
@@ -857,7 +927,7 @@ function subscriptions_node_is_blocked($nid) {
 function _subscriptions_cmp_by_weight(array $a, array $b) {
   $a = (isset($a['weight']) ? $a['weight'] : 0);
   $b = (isset($b['weight']) ? $b['weight'] : 0);
-  return ($a < $b ? -1 : ($a == $b ? 0 : +1));
+  return ($a < $b ? -1 : ($a == $b ? 0 : + 1));
 }
 
 /**
@@ -869,7 +939,7 @@ function _subscriptions_cmp_by_weight(array $a, array $b) {
  *   send_interval_visible/send_updates_visible/send_comments_visible/
  *     | 1, 0, -1 = only preference, -2 = always use site default
  *   secure_links
- *     | 1, 0 for $uid>0; 1, 0, -1, -2 for -DRUPAL_AUTHENTICATED_RID
+ *     | 1, 0 for $uid>0; 1, 0, -1, -2 for -BACKDROP_AUTHENTICATED_RID
  *   uses_defaults values;
  *
  * @param string $name
@@ -880,7 +950,7 @@ function _subscriptions_cmp_by_weight(array $a, array $b) {
  */
 function _subscriptions_get_setting($name, $account) {
   global $user;
-  $uid = -DRUPAL_AUTHENTICATED_RID;
+  $uid = -BACKDROP_AUTHENTICATED_RID;
   if (empty($account) || is_object($account) && empty($account->uid) || is_numeric($account) && $account <= 0 ) {
     unset($account);
   }
@@ -902,7 +972,7 @@ function _subscriptions_get_setting($name, $account) {
   if (!isset($defaults[$uid][$name])) {
     $result = db_select('subscriptions_user', 'su', array('fetch' => PDO::FETCH_ASSOC))
       ->fields('su', array('uid', 'digest', 'secure_links', 'send_interval', 'send_updates', 'send_comments', 'send_interval_visible', 'send_updates_visible', 'send_comments_visible', 'autosub_on_post', 'autosub_on_update', 'autosub_on_comment', 'send_self'))
-      ->condition('su.uid', array(-DRUPAL_AUTHENTICATED_RID, $uid), 'IN')
+      ->condition('su.uid', array(-BACKDROP_AUTHENTICATED_RID, $uid), 'IN')
       ->orderBy('su.uid')
       ->execute();
     foreach ($result as $s) {
@@ -918,13 +988,14 @@ function _subscriptions_get_setting($name, $account) {
       // now, with the expected hook_user() invocations:
       if ($uid > 0) {
         $account = user_load($uid);
-        subscriptions_user_insert(array(), $account, NULL);
+        // subscriptions_user_insert(array(), $account, NULL);
+        _subscriptions_user_insert_internal($account);
       }
       else {
         db_insert('subscriptions_user')
           ->fields(array(
-            'uid' => $uid,
-          ))
+          'uid' => $uid,
+        ))
           ->execute();
       }
       return _subscriptions_get_setting($name, $uid);
@@ -939,15 +1010,15 @@ function _subscriptions_get_setting($name, $account) {
 
     $defaults[$uid]['uses_defaults'] = FALSE;
     foreach ($defaults[$uid] as $key => $value) {
-      if ($value < 0) {  // not set, use site dft
-        $defaults[$uid][$key] = $defaults[-DRUPAL_AUTHENTICATED_RID][$key];
+      if ($value < 0) { // not set, use site dft
+        $defaults[$uid][$key] = $defaults[-BACKDROP_AUTHENTICATED_RID][$key];
         $defaults[$uid]['uses_defaults'] = TRUE;
       }
     }
     foreach (array('interval', 'updates', 'comments') as $parm ) {
       // Site overrides user values.
-      if ($defaults[-DRUPAL_AUTHENTICATED_RID]['send_' . $parm . '_visible'] == -2) {
-        $defaults[$uid]['send_' . $parm] = $defaults[-DRUPAL_AUTHENTICATED_RID]['send_' . $parm];
+      if ($defaults[-BACKDROP_AUTHENTICATED_RID]['send_' . $parm . '_visible'] == -2) {
+        $defaults[$uid]['send_' . $parm] = $defaults[-BACKDROP_AUTHENTICATED_RID]['send_' . $parm];
       }
     }
   }
@@ -1049,7 +1120,7 @@ function _subscriptions_bulk_operation(array $uids, $bulk_op) {
   $_SESSION['subscriptions']['bulk_op'] = $bulk_op;
   $_SESSION['subscriptions']['uids'] = serialize($uids);
   $_SESSION['subscriptions']['back_url'] = current_path();
-  drupal_goto(SUBSCRIPTIONS_CONFIG_PATH . '/userdefaults/bulk');
+  backdrop_goto(SUBSCRIPTIONS_CONFIG_PATH . '/userdefaults/bulk');
 }
 
 /**
@@ -1087,8 +1158,8 @@ function subscriptions_arg($index, $member_name = FALSE) {
  */
 function subscriptions_coder_ignore() {
   return array(
-    'path'        => drupal_get_path('module', 'subscriptions'),
-    'line prefix' => drupal_get_path('module', 'subscriptions') . '/',
+    'path' => backdrop_get_path('module', 'subscriptions'),
+    'line prefix' => backdrop_get_path('module', 'subscriptions') . '/',
   );
 }
 
@@ -1097,5 +1168,13 @@ function subscriptions_coder_ignore() {
  */
 function subscriptions_user_cancel_methods_alter(&$methods) {
   $methods['user_cancel_reassign']['title'] .= ' &mdash; <span class="warning">' . t('WARNING: Reassigning content and comments may trigger unwanted Subscriptions notifications!') . '</span>';
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function subscriptions_autoload_info() {
+  return array(
+  );
 }
 

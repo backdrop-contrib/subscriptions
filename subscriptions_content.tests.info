@@ -1,0 +1,6 @@
+[SubscriptionsWebTestCase]
+name = Subscriptions Test
+description = This is a dummy test to keep d.o's testbot happy; real tests are welcome!
+group = Subscriptions
+file = tests/subscriptions.test
+

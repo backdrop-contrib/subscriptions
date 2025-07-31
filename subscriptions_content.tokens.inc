@@ -57,7 +57,7 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
           break;
         case 'view':
           $element = comment_view($comment, $data['node'], 'subscriptions', $options['language']->language);
-          $replacements[$original] = drupal_render($element);
+          $replacements[$original] = backdrop_render($element);
           break;
       }
     }
@@ -84,7 +84,7 @@ function subscriptions_content_tokens($type, array $tokens, array $data = array(
           break;
         case 'view':
           $element = node_view($node, 'subscriptions', $options['language']->language);
-          $replacements[$original] = drupal_render($element);
+          $replacements[$original] = backdrop_render($element);
           break;
       }
     }

@@ -77,7 +77,7 @@ function subscriptions_content_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $a
       return $stypes;
 
     case 'stype':
-      return (isset($stypes[$arg0]) ? array_merge( $stypes[$arg0], array($arg1, $arg2)) : NULL);
+      return (isset($stypes[$arg0])?array_merge( $stypes[$arg0], array($arg1, $arg2)) : NULL);
 
     case 'mailkeys':
       $mailkeys = array();
@@ -102,7 +102,7 @@ function subscriptions_content_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $a
 }
 
 /**
- * Implementation of hook_node_options(), subhook of hook_subscriptions().
+ * Implements hook_node_options(), subhook of hook_subscriptions().
  *
  * This is called by subscriptions_ui_node_form() in subscriptions_ui.module.
  *
@@ -116,21 +116,26 @@ function subscriptions_content_subscriptions($op, $arg0 = NULL, $arg1 = NULL, $a
  * @see subscriptions_ui_node_form()
  */
 function _subscriptions_content_node_options($account, $node) {
+  $config = config('subscriptions.settings');
   // Default node, field are the first three indexes, but they can be overridden in params
   // Thread
   $options = array();
   /** @var $statics array */
-  $statics = variable_get('subscriptions_static_content_types', array());
+  $statics = $config->get('subscriptions_static_content_types');
   if (!in_array($node->type, $statics, TRUE)) {
     $options['nid'][] = array(
       'name' => t('Subscribe to this page'),
-      'params' => array('module' => 'node', 'field' => 'nid', 'value' => $node->nid),
+      'params' => array(
+        'module' => 'node',
+        'field' => 'nid',
+        'value' => $node->nid,
+      ),
       'link' => 'node/' . $node->nid,
     );
     $options['nid']['weight'] = -4;
   }
   /** @var $unlisteds array */
-  $unlisteds = variable_get('subscriptions_unlisted_content_types', array());
+  $unlisteds = $config->get('subscriptions_unlisted_content_types');
   if (user_access('subscribe to content types', $account)) {
     $unlisted_tag = '';
     if (in_array($node->type, $unlisteds, TRUE)) {
@@ -146,13 +151,22 @@ function _subscriptions_content_node_options($account, $node) {
     if ($type_name) {
       $options['type'][] = array(
         'name' => t('To %type content', array('%type' => $type_name)) . $unlisted_tag,
-        'params' => array('module' => 'node', 'field' => 'type', 'value' => $node->type),
+        'params' => array(
+          'module' => 'node',
+          'field' => 'type',
+          'value' => $node->type,
+        ),
         'link' => 'type/' . $node->type,
       );
       // Content type and author
       $options['type'][] = array(
-        'name' => t('To %type content by %name', array('%type' => $type_name, '%name' => format_username(user_load($node->uid)))) . $unlisted_tag,
-        'params' => array('module' => 'node', 'field' => 'type', 'value' => $node->type, 'author_uid' => $node->uid),
+        'name' => t('To %type content by %name', array('%type' => $type_name, '%name' => user_format_name(user_load($node->uid)))) . $unlisted_tag,
+        'params' => array(
+          'module' => 'node',
+          'field' => 'type',
+          'value' => $node->type,
+          'author_uid' => $node->uid,
+        ),
         'link' => 'type/' . $node->type . '/' . $node->uid,
       );
       $options['type']['weight'] = -2;
@@ -162,7 +176,7 @@ function _subscriptions_content_node_options($account, $node) {
 }
 
 /**
- * Implements _hook_access(), subhook of hook_subscriptions().
+ * Implements hook_access(), subhook of hook_subscriptions().
  *
  * @param string $load_function
  * @param string $load_args
@@ -188,7 +202,7 @@ function _subscriptions_content_access($load_function, $load_args, $node) {
 }
 
 /**
- * Implements _hook_types(), subhook of hook_subscriptions().
+ * Implements hook_types(), subhook of hook_subscriptions().
  *
  * This is called by subscriptions_types() in subscriptions.module.
  *
@@ -201,32 +215,32 @@ function _subscriptions_content_access($load_function, $load_args, $node) {
  */
 function _subscriptions_content_types() {
   $types['node'] = array(
-    'title'      => 'Pages/Threads',
-    'page'       => 'subscriptions_content_page_node',
-    'fields'     => array('node', 'nid'),
-    'weight'     => -40,
-    'access'     => 'subscribe to content',
+    'title' => 'Pages/Threads',
+    'page' => 'subscriptions_content_page_node',
+    'fields' => array('node', 'nid'),
+    'weight' => -40,
+    'access' => 'subscribe to content',
     'permission' => array(
-      'title'       => t('Subscribe to content'),
+      'title' => t('Subscribe to content'),
       'description' => t('Subscribe to single pages/threads.'),
     ),
   );
   $types['type'] = array(
-    'title'      => 'Content types',
-    'page'       => 'subscriptions_content_page_type',
-    'fields'     => array('node', 'type'),
-    'weight'     => -30,
-    'access'     => 'subscribe to content types',
+    'title' => 'Content types',
+    'page' => 'subscriptions_content_page_type',
+    'fields' => array('node', 'type'),
+    'weight' => -30,
+    'access' => 'subscribe to content types',
     'permission' => array(
-      'title'       => t('Subscribe to content types'),
+      'title' => t('Subscribe to content types'),
       'description' => t('Subscribe to entire content types; requires the %perm permission.', array('%perm' => $types['node']['permission']['title'])),
     ),
   );
   $types['all_types'] = array(
-    'title'      => '',
-    'access'     => 'subscribe to all content types',
+    'title' => '',
+    'access' => 'subscribe to all content types',
     'permission' => array(
-      'title'       => t('Subscribe to all content types'),
+      'title' => t('Subscribe to all content types'),
       'description' => t('Subscribe even to unlisted and blocked content types.') .
                        '<br /><em>' . t('This permission is typically reserved for administrative roles.') . '</em>',
     ),
@@ -245,7 +259,7 @@ function _subscriptions_content_types() {
  * @param array $types
  */
 function subscriptions_content_node_load(array $nodes, array $types) {
-  $unpublished_nids = &drupal_static('subscriptions_content_unpublished_nids', array());
+  $unpublished_nids = &backdrop_static('subscriptions_content_unpublished_nids', array());
   foreach ($nodes as $node) {
     if (!$node->status) {
       // Since workbench_moderate does some unconventional things to the node
@@ -297,7 +311,11 @@ function subscriptions_content_workbench_moderation_check_is_unpublished($node) 
  * @param object $node
  */
 function subscriptions_content_node_prepare($node) {
-  $node->subscriptions_notify = in_array((isset($node->nid) ? ($node->status ? 'n_pub' : 'n_unpub') : 'n_new'), subscriptions_content_get_default_workflow($node->type));
+  $workflow = subscriptions_content_get_default_workflow($node->type);
+  $node->subscriptions_notify = in_array(
+    (isset($node->nid) ? ($node->status ? 'n_pub' : 'n_unpub') : 'n_new'),
+    is_array($workflow) ? $workflow : []
+  );
 }
 
 /**
@@ -308,7 +326,7 @@ function subscriptions_content_node_prepare($node) {
  * @param object $node
  */
 function subscriptions_content_node_update($node) {
-  $unpublished_nids = &drupal_static('subscriptions_content_unpublished_nids', array());
+  $unpublished_nids = &backdrop_static('subscriptions_content_unpublished_nids', array());
   $inserted = FALSE;
   if (array_search($node->nid, $unpublished_nids) !== FALSE && $node->status) {
     // An unpublished node just became published -- treat this as an 'insert'!
@@ -455,9 +473,9 @@ function subscriptions_content_form_node_type_form_alter(array &$form, array &$f
     '#description' => t('Select all situations where generation of notifications should be ON.') . '<br />' .
       t('Items that are created in unpublished state create notifications to administrators only; when they are later published, "new" notifications are generated.') . '<br />' .
       t('Users with the %administer_nodes / %administer_comments permissions will be able to override these options.', array(
-        '%administer_nodes' => $tr('administer nodes'),
-        '%administer_comments' => $tr('administer comments'),
-      )),
+      '%administer_nodes' => $tr('administer nodes'),
+      '%administer_comments' => $tr('administer comments'),
+    )),
   );
   $form['#submit'][] = 'subscriptions_content_node_type_form_submit';
 }
@@ -472,7 +490,8 @@ function subscriptions_content_form_node_type_form_alter(array &$form, array &$f
  *   node/comment actions will trigger notifications.
  */
 function subscriptions_content_get_default_workflow($content_type) {
-  return variable_get('subscriptions_default_workflow_' . $content_type, array('n_new', 'n_unpub', 'n_pub', 'c_new', 'c_unpub', 'c_pub'));
+  $workflow = config_get('subscriptions.settings', 'subscriptions_default_workflow_' . $content_type);
+  return is_array($workflow) ? $workflow : [];
 }
 
 /**
@@ -482,7 +501,7 @@ function subscriptions_content_get_default_workflow($content_type) {
  * @param array $form_state
  */
 function subscriptions_content_node_type_form_submit(array $form, array &$form_state) {
-  variable_set('subscriptions_default_workflow_' . $form_state['values']['type'], $form_state['values']['subscriptions_workflow']);
+  config_set('subscriptions.settings', 'subscriptions_default_workflow_' . $form_state['values']['type'], $form_state['values']['subscriptions_workflow']);
 }
 
 /**
@@ -514,10 +533,12 @@ function subscriptions_content_form_alter(array &$form, array &$form_state, $for
       $form['options']['subscriptions_notify']['note'] = array(
         '#type' => 'item',
         '#description' => t('You may want to turn %Send_subscriptions_notifications OFF when you only change %Publishing_options, otherwise Subscriptions will send out "update" notifications &mdash; this option is not saved.<br />Subscriptions does not send notifications for unpublished nodes (except to users who have the %administer_nodes permission), but when you set %Published to ON, Subscriptions will send out "new" notifications, unless you turn this off here.',
-                            array('%Send_subscriptions_notifications' => t('Send subscriptions notifications'),
-                                  '%Publishing_options' => $tr('Publishing options'),
-                                  '%administer_nodes' => $tr('Administer content'),
-                                  '%Published' => $tr('Published'))),
+                            array(
+          '%Send_subscriptions_notifications' => t('Send subscriptions notifications'),
+          '%Publishing_options' => $tr('Publishing options'),
+          '%administer_nodes' => $tr('Administer content'),
+          '%Published' => $tr('Published'),
+        )),
       );
     }
   }
@@ -579,7 +600,7 @@ function subscriptions_content_form_comment_form_alter(array &$form, array &$for
   $is_unpublished = ($is_update ? $form['author']['status']['#default_value'] : !user_access('post comments without approval'));
   if (user_access('administer comments')) {
     $tr = 't';
-    $item =& $form['author']['subscriptions_notify'];
+    $item = &$form['author']['subscriptions_notify'];
     $item['#type'] = 'item';
     $item['subscriptions_notify'] = array(
       '#type' => 'checkbox',
@@ -637,7 +658,7 @@ function subscriptions_content_node_admin_nodes_submit(array $form, array &$form
  * @return bool
  */
 function subscriptions_content_suppress_notifications($set = NULL) {
-  static $suppress_notifications = FALSE; // not drupal_static!
+  static $suppress_notifications = FALSE; // not backdrop_static!
   if ($set !== NULL) {
     $suppress_notifications = $set;
   }
@@ -674,7 +695,7 @@ function _subscriptions_content_autosubscribe($content_type, $module, $field, $v
  */
 function subscriptions_content_type_is_blocked($content_type) {
   /** @var $blockeds array */
-  $blockeds = variable_get('subscriptions_blocked_content_types', array());
+  $blockeds = config_get('subscriptions.settings', 'subscriptions_blocked_content_types');
   return in_array($content_type, $blockeds, TRUE);
 }
 
@@ -682,7 +703,7 @@ function subscriptions_content_type_is_blocked($content_type) {
  * Prepares the $data array for resolving tokens.
  *
  * @param array $data
- *   Array of data to pass to drupal_mail() and ultimately hook_tokens().
+ *   Array of data to pass to backdrop_mail() and ultimately hook_tokens().
  * @param object|array $node
  *   Node object used to fill $mailvars.
  * @param array $queue_item
@@ -801,9 +822,9 @@ function subscriptions_content_node_type_delete($info) {
     ->execute();
   subscriptions_delete_for_all_users('node', 'type', $type);
   foreach (array('blocked', 'unlisted') as $key) {
-    $array = variable_get('subscriptions_' . $key . '_content_types', array());
+    $array = config_get('subscriptions.settings', 'subscriptions_' . $key . '_content_types');
     unset($array[$type]);
-    variable_set('subscriptions_' . $key . '_content_types', $array);
+    config_set('subscriptions.settings', 'subscriptions_' . $key . '_content_types', $array);
   }
 }
 
@@ -823,8 +844,8 @@ function subscriptions_content_cron() {
   if ($weights['subscriptions_content'] <= $weights['taxonomy']) {
     db_update('system')
       ->fields(array(
-          'weight' => $weights['taxonomy'] + 1,
-        ))
+      'weight' => $weights['taxonomy'] + 1,
+    ))
       ->condition('name', 'subscriptions_content')
       ->condition('type', 'module')
       ->execute();
@@ -844,14 +865,14 @@ function subscriptions_content_disable() {
     ->execute();
 }
 /**
- * Implements hook_views_api()
+ * Implements hook_views_api().
  */
 function subscriptions_content_views_api() {
   return array('api' => 3);
 }
 
 /**
- * Implements hook_views_data_alter() to add items to the node table that are
+ * Implements hook_views_data_alter() to add items to the node table that are().
  * relevant to subscriptions_content.
  */
 function subscriptions_content_views_data_alter(&$data) {
@@ -872,7 +893,7 @@ function subscriptions_content_views_data_alter(&$data) {
  *   Array of filter definitions.
  */
 function subscriptions_content_advuser_filters_alter(array &$filters) {
-  include_once DRUPAL_ROOT . '/modules/forum/forum.admin.inc';
+  include_once BACKDROP_ROOT . '/modules/forum/forum.admin.inc';
   $forum_tree = _forum_parent_select(-1, '', 'forum');
   unset($forum_tree['#options'][0]);
   $filters['subscriptions_forum'] = array(
@@ -882,6 +903,14 @@ function subscriptions_content_advuser_filters_alter(array &$filters) {
     'form_type' => 'select',
     'operations' => array('=', '!='),
     'join' => array('subscriptions', 's', '%alias.recipient_uid = u.uid'),
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function subscriptions_content_autoload_info() {
+  return array(
   );
 }
 
