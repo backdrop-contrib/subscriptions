@@ -81,14 +81,15 @@ function subscriptions_settings_form(array $form, array &$form_state) {
                          . '<ul><li>' . $tr('Subscriptions UI') . '</li><li>' . $tr('Subscriptions Mail ')
                          . '</li><li>' . $tr('Content Subscriptions') . '</li><li>' . $tr('Taxonomy Subscriptions') . '</li></ul>', 'warning', FALSE);
     }
+
+    $form['subscriptions_show_install_info'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Keep showing the installation reminder above.'),
+      '#default_value' => $config->get('subscriptions_show_install_info'),
+      '#description' => t('Uncheck this box to permanently remove the reminder, if you have a reason for not enabling the standard selection of Subscriptions modules.'),
+      '#weight' => -101,
+    );
   }
-  $form['subscriptions_show_install_info'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Keep showing the installation reminder above.'),
-    '#default_value' => $config->get('subscriptions_show_install_info'),
-    '#description' => t('Uncheck this box to permanently remove the reminder, if you have a reason for not enabling the standard selection of Subscriptions modules.'),
-    '#weight' => -101,
-  );
 
   return system_settings_form($form);
 }

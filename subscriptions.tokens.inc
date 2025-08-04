@@ -382,7 +382,8 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
   // Entity field tokens.
   if (isset($data['object_type'])) {
     $type = $data['object_type'];
-    if (!empty($data[$type]) && $entity_type = token_get_entity_mapping('token', $type)) {
+    $entity_info = entity_get_info($type);
+    if (!empty($data[$type]) && !empty($entity_info)) {
       $entity = NULL;
 
       foreach ($field_types as $field_type => $array_type) {

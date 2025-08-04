@@ -35,8 +35,11 @@ function _subscriptions_mail_mail_edit_text($mailkey, $language) {
       );
       break;
     default:
-      $return = _mail_edit_load('subscriptions_mail_.DEFAULT', $langcode, TRUE);
-      unset($return['default'], $return['language'], $return['type']);
+      $return = subscriptions_mail_template($mailkey, $langcode);
+      break;
+
+      // $return = _mail_edit_load('subscriptions_mail_.DEFAULT', $langcode, TRUE);
+      // unset($return['default'], $return['language'], $return['type']);
       // TODO: Implement a hook to allow other modules to provide their default templates.
   }
   $return['always'] = TRUE;

@@ -24,8 +24,19 @@ t('| ---------------------------------------------------', array(), array('langc
 t('=====================================================', array(), array('langcode' => $langcode));
 
     case 'SUBJ':
-      return // SUBSCRIPTIONS_DEFAULT_SUBJECT
-t('[[site:name]] [subs:type] subscription for [current-user:name]: [node:title]', array(), array('langcode' => $langcode));
+      // SUBSCRIPTIONS_DEFAULT_SUBJECT
+      $default_subject = t('[[site:name]] [subs:type] subscription for [current-user:name]: [node:title]', array(), array('langcode' => $langcode));
+
+      $query = db_select('mail_edit', 'me')
+        ->fields('me', ['subject'])
+        ->condition('id', 'subscriptions_mail_.DEFAULT');
+      $subject = $query->execute()->fetchField();
+      if ($subject) {
+        $default_subject = $subject;
+      }
+
+      return $default_subject;
+
 
     case 'FOOT':
       return // SUBSCRIPTIONS_DEFAULT_FOOTER
@@ -35,37 +46,48 @@ t('| This is an automated message. Please do NOT reply to the sender address!
 ', array(), array('langcode' => $langcode));
 
     case 'BODY':
-      return // SUBSCRIPTIONS_DEFAULT_BODY
-t('{{MAIL@| Greetings, [current-user:name].
-|
-| Your subscription on [site:name]
-| notifies you of {{[subs:is-new]==0?:a new post:
-}}{{[subs:is-updated]#an updated post:
-}}{{[subs:is-old]#new comments on:
-}}|
-}}{{![subs:is-published]#| ***** This post is unpublished! *****
-}}{{![subs:category:tid]?:{{[subs:category:tid]==[subs:forum:tid]?:| Category: [subs:category:name]
-}}}}{{![subs:forum:tid]?:| Forum: [subs:forum:name]
-}}{{![node:author:name]?:| Author: [node:author:name]
-}}| Title: [node:title]
-{{![subs:terms:field_tags:count]?:| [subs:terms:field_tags:first:vocabulary:name]: {{[subs:terms:field_tags:count]#{{!!#0#, }}[subs:terms:field_tags:index:#0:name]}}
-}}{{![subs:is-old]?&nbsp;
-[node:body]:{{![subs:has-distinct-summary]?&nbsp;
-[node:body]:| Summary:
-&nbsp;
-[node:summary]}}}}
-| LINK: [node:url]
-{{![subs:is-old]#{{!![subs:files:field_files:count]#| Attached files:
-{{[subs:files:field_files:count]#| [subs:files:field_files:index:#0:url]
-}}}}}}{{![subs:comments:count]?!SEPARATOR
-:|
-| Comments: [subs:comments:count]
-!SEPARATOR
-[subs:comments:join:
-]
-}}| Direct unsubscribe link ([subs:type]):
-| [subs:unsubscribe-url]
-{{MAIL@!FOOTER}}', array('!SEPARATOR' => subscriptions_mail_template_raw('SEP', $langcode), '!FOOTER' => subscriptions_mail_template_raw('FOOT', $langcode)), array('langcode' => $langcode));
+      // SUBSCRIPTIONS_DEFAULT_BODY
+      $default_body = t('{{MAIL@| Greetings, [current-user:name].
+        |
+        | Your subscription on [site:name]
+        | notifies you of {{[subs:is-new]==0?:a new post:
+        }}{{[subs:is-updated]#an updated post:
+        }}{{[subs:is-old]#new comments on:
+        }}|
+        }}{{![subs:is-published]#| ***** This post is unpublished! *****
+        }}{{![subs:category:tid]?:{{[subs:category:tid]==[subs:forum:tid]?:| Category: [subs:category:name]
+        }}}}{{![subs:forum:tid]?:| Forum: [subs:forum:name]
+        }}{{![node:author:name]?:| Author: [node:author:name]
+        }}| Title: [node:title]
+        {{![subs:terms:field_tags:count]?:| [subs:terms:field_tags:first:vocabulary:name]: {{[subs:terms:field_tags:count]#{{!!#0#, }}[subs:terms:field_tags:index:#0:name]}}
+        }}{{![subs:is-old]?&nbsp;
+        [node:body]:{{![subs:has-distinct-summary]?&nbsp;
+        [node:body]:| Summary:
+        &nbsp;
+        [node:summary]}}}}
+        | LINK: [node:url]
+        {{![subs:is-old]#{{!![subs:files:field_files:count]#| Attached files:
+        {{[subs:files:field_files:count]#| [subs:files:field_files:index:#0:url]
+        }}}}}}{{![subs:comments:count]?!SEPARATOR
+        :|
+        | Comments: [subs:comments:count]
+        !SEPARATOR
+        [subs:comments:join:
+        ]
+        }}| Direct unsubscribe link ([subs:type]):
+        | [subs:unsubscribe-url]
+        {{MAIL@!FOOTER}}', array('!SEPARATOR' => subscriptions_mail_template_raw('SEP', $langcode), '!FOOTER' => subscriptions_mail_template_raw('FOOT', $langcode)), array('langcode' => $langcode));
+
+      $query = db_select('mail_edit', 'me')
+        ->fields('me', ['body'])
+        ->condition('id', 'subscriptions_mail_.DEFAULT');
+      $body = $query->execute()->fetchField();
+      if ($body) {
+        $default_body = $body;
+      }
+
+      return $default_body;
+
 
     case 'CITEM':
       return // SUBSCRIPTIONS_DEFAULT_COMMENT_ITEM
@@ -94,8 +116,34 @@ t('| Greetings, [current-user:name].
 [subs:items:index:#0:formatted]
 }}!SEPARATOR
 !FOOTER', array('!SEPARATOR' => subscriptions_mail_template_raw('SEPD', $langcode), '!FOOTER' => subscriptions_mail_template_raw('FOOT', $langcode)), array('langcode' => $langcode));
-
   }
+
+  if (preg_match('/^node-type-/', $key)) {
+    $default_subject = t('[[site:name]] [subs:type] subscription for [current-user:name]: [node:title]', [], ['langcode' => $langcode]);
+    $default_body = 'Dear [current-user:name],
+
+  Your subscription on [site:name]
+  notifies you of {{[subs:is-new]==0?:a new post:}}{{[subs:is-updated]#an updated post:}}{{[subs:is-old]#new comments on:}}[node:title]';
+
+    // Fetch subject and body from mail_edit table
+    $query = db_select('mail_edit', 'me')
+      ->fields('me', ['subject', 'body'])
+      ->condition('id', 'subscriptions_mail_' . $key);
+    $result = $query->execute()->fetchAssoc();
+
+    if (!empty($result['subject'])) {
+      $default_subject = $result['subject'];
+    }
+    if (!empty($result['body'])) {
+      $default_body = $result['body'];
+    }
+
+    return [
+      'subject' => $default_subject,
+      'body' => $default_body,
+    ];
+  }
+
   return NULL;
 }
 
