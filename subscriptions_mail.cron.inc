@@ -59,7 +59,7 @@ function _subscriptions_mail_cron() {
     backdrop_save_session(FALSE);
     // Clear the term cache to avoid getting a different user's set of terms.
     entity_load('taxonomy_term', array(), array(), TRUE);
-    $lang_code = $language->language;
+    $lang_code = isset($language->langcode) ? $language->langcode : language_default()->langcode;
     $user      = $subscriber;
 
     $digest_data                      = array('subs' => array('type' => 'digest'));
@@ -357,6 +357,10 @@ function _subscriptions_mail_mail_alter(array &$message) {
   static $site_url = NULL;
   static $replacement;
 
+  $langcode = isset($message['language']->langcode)
+    ? $message['language']->langcode
+    : language_default()->langcode;
+
   if (!isset($site_url)) {
     $site_url = url('', array('absolute' => TRUE));
     if (_subscriptions_get_setting('secure_links', $user) > 0) {
@@ -382,7 +386,11 @@ function _subscriptions_mail_mail_alter(array &$message) {
     $message['body'][0] = $msg;
   }
 
-  $message['body'][0] = _subscriptions_mail_add_mailkey($message['body'][0], $message['id'], $message['language']->language);
+  $message['body'][0] = _subscriptions_mail_add_mailkey(
+    $message['body'][0],
+    $message['id'],
+    $langcode
+  );
 
   /* Comment this line for debugging...
    dpm($message, 'backdrop_mail() is disabled in subscriptions_mail_mail_alter(); this would be sent');

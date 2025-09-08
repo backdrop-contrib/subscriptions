@@ -80,7 +80,3 @@ function subscriptions_mail_requirements($phase) {
   }
   return $requirements;
 }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function subscriptions_mail_update_7000() { }
-

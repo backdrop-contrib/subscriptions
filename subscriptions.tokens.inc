@@ -174,10 +174,10 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
   $url_options = array('absolute' => TRUE);
   if (isset($options['language'])) {
     $url_options['language'] = $options['language'];
-    $language_code = $options['language']->language;
+    $language_code = language_default()->langcode;
   }
   else {
-    $language_code = NULL;
+    $language_code = language_default()->langcode;
   }
   $sanitize = !empty($options['sanitize']);
 
@@ -399,8 +399,8 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
             $tokenss[$field_name][substr($field_token, strlen($field_name) + 1)] = $original;
           }
 
-          list(, , $bundle) = entity_extract_ids($entity_type, $entity);
-          $fields = field_info_instances($entity_type, $bundle);
+          list(, , $bundle) = entity_extract_ids($type, $entity);
+          $fields = field_info_instances($type, $bundle);
           foreach ($tokenss as $field_name => $tokens2) {
             if (isset($fields[$field_name])) {
               if (empty($entity->{$field_name})) {
@@ -411,7 +411,7 @@ function subscriptions_tokens($type, array $tokens, array $data = array(), array
               else {
                 $objs = array();
                 if ($array_type == 'array') {
-                  $field_output = field_view_field($entity_type, $entity, $field_name, 'token', $language_code);
+                  $field_output = field_view_field($type, $entity, $field_name, 'token', $language_code);
                   $field_output['#token_options'] = $options;
                   $field_output['#pre_render'][] = 'token_pre_render_field_token';
                   foreach (element_children($field_output) as $key) {

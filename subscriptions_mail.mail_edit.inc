@@ -18,7 +18,7 @@
  * @ingroup hooks
  */
 function _subscriptions_mail_mail_edit_text($mailkey, $language) {
-  $langcode = $language->language;
+  $langcode = isset($language->langcode) ? $language->langcode : language_default()->langcode;
   _subscriptions_mail_module_load_include('templates.inc');
   switch ($mailkey) {
     case '.DEFAULT':
@@ -59,6 +59,14 @@ function _subscriptions_mail_mail_edit_text($mailkey, $language) {
  */
 function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array()) {
   global $language;
+  // Determine a safe langcode.
+  if (isset($language) && isset($language->langcode)) {
+    $langcode = $language->langcode;
+  }
+  else {
+    $langcode = language_default()->langcode;
+  }
+
   $massage_tokens = &backdrop_static('subscriptions_mail_massage_tokens');
   $massage_tokens = FALSE;
 
@@ -67,7 +75,7 @@ function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array())
     // Clear token.module's caches.
     cache_clear_all('tree-rendered:', 'cache_token', TRUE);
     cache_clear_all('tree:subs:', 'cache_token', TRUE);
-    cache_clear_all("info:{$language->language}", 'cache_token');
+    cache_clear_all("info:{$langcode}", 'cache_token');
     $token_get_info = &backdrop_static('token_get_info');
     $token_get_info = NULL;
     $token_info = &backdrop_static('token_info');
@@ -79,7 +87,7 @@ function _subscriptions_mail_mail_edit_token_types($mailkey, $options = array())
     $massage_tokens = FALSE;
     //dpm(token_get_info(), "HACK DONE");
     // Clear the permanent cache, keeping token.module's static caches.
-    cache_clear_all("info:{$language->language}", 'cache_token');
+    cache_clear_all("info:{$langcode}", 'cache_token');
   }
 
   $token_types = module_invoke_all('subscriptions', 'token_types', substr($mailkey, 19));

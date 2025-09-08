@@ -31,7 +31,7 @@ function _subscriptions_taxonomy_form_subscriptions_settings_form_alter(array &$
   $vocabularies = taxonomy_get_vocabularies();
   $select[0] = '<' . t('none') . '>';
   foreach ($vocabularies as $vocabulary) {
-    $select[$vocabulary->vid] = check_plain($vocabulary->name);
+    $select[$vocabulary->machine_name] = check_plain($vocabulary->name);
   }
 
   $form['taxonomy']['subscriptions_restricted_taxa'] = array(
@@ -109,7 +109,7 @@ function _subscriptions_taxonomy_taxa_form(array $form, $uid, array $vocabularie
     $tree = NULL;
     if (!in_array($vocab->vid, $vids_to_restrict)) {
       // @ TODO create mechanism to allow users to
-//        subscribe to all terms under this vocabulary
+      // subscribe to all terms under this vocabulary
       $tree = taxonomy_get_tree($vocab->vid);
     }
     else {
@@ -121,6 +121,7 @@ function _subscriptions_taxonomy_taxa_form(array $form, $uid, array $vocabularie
         );
       }
     }
+
     $forum_containers = NULL;
     // TODO This variable was removed in Backdrop without replacement.
     if (module_exists('forum') && $vocab->vid == variable_get('forum_nav_vocabulary', '')) {

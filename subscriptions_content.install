@@ -43,10 +43,3 @@ function subscriptions_content_update_last_removed() {
  * Implements hook_uninstall().
  */
 function subscriptions_content_uninstall() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function subscriptions_content_update_7001() { }
-
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
-function subscriptions_content_update_7002() { }
-
